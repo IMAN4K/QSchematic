@@ -16,6 +16,22 @@ const QColor COLOR_BODY_FILL   = QColor(Qt::green);
 const QColor COLOR_BODY_BORDER = QColor(Qt::black);
 const qreal PEN_WIDTH          = 1.5;
 
+namespace QSchematic {
+
+// NOTE: Temporary to load design files saved before the change to QS::Node as
+// primary base item
+auto get_item_maybe_node(const Gpds::Container& container) -> Gpds::Container* {
+    auto a = container.getValue<Gpds::Container*>("item");
+    if (auto b = a->getValue<Gpds::Container*>("node")) {
+        return b;
+    }
+    else {
+        return a;
+    }
+}
+
+}
+
 using namespace QSchematic;
 
 const int DEFAULT_WIDTH     = 160;
@@ -23,13 +39,13 @@ const int DEFAULT_HEIGHT    = 240;
 
 Node::Node(int type, QGraphicsItem* parent) :
     Item(type, parent),
-    _mode(None),
+    _interactionMode(None),
     _size(DEFAULT_WIDTH, DEFAULT_HEIGHT),
     _allowMouseResize(true),
     _allowMouseRotate(true),
     _connectorsMovable(false),
-    _connectorsSnapPolicy(Connector::NodeSizerectOutline),
-    _connectorsSnapToGrid(true)
+    _connectorsSnapToGrid(true),
+    _connectorsSnapPolicy(Connector::NodeSizerectOutline)
 {
 }
 
@@ -122,9 +138,9 @@ void Node::copyAttributes(Node& dest) const
     }
 
     // Attributes
-    dest._mode = _mode;
-    dest._lastMousePosWithGridMove = _lastMousePosWithGridMove;
-    dest._resizeHandle = _resizeHandle;
+    dest._interactionMode = _interactionMode;
+    dest._interactionLastMousePosWithGridMove = _interactionLastMousePosWithGridMove;
+    dest._interactionResizeHandle = _interactionResizeHandle;
     dest._size = _size;
     dest._allowMouseResize = _allowMouseResize;
     dest._allowMouseRotate = _allowMouseRotate;
@@ -136,7 +152,7 @@ void Node::copyAttributes(Node& dest) const
 
 Node::Mode Node::mode() const
 {
-    return _mode;
+    return _interactionMode;
 }
 
 void Node::setSize(const QSizeF& size)
@@ -422,7 +438,7 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
     Item::mousePressEvent(event);
 
     // Presume no mode
-    _mode = None;
+    _interactionMode = None;
 
     // Check if clicked on a resize handle
     if (isSelected() && _allowMouseResize) {
@@ -430,9 +446,9 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
         auto it = handles.constBegin();
         while (it != handles.constEnd()) {
             if (it.value().contains(event->pos().toPoint())) {
-                _mode = Resize;
-                _lastMousePosWithGridMove = event->scenePos();
-                _resizeHandle = it.key();
+                _interactionMode = Resize;
+                _interactionLastMousePosWithGridMove = event->scenePos();
+                _interactionResizeHandle = it.key();
                 break;
             }
             it++;
@@ -442,18 +458,26 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
     // Rotation
     if (isSelected() && _allowMouseRotate) {
         if (rotationHandle().contains(event->pos().toPoint())) {
-            _mode = Rotate;
+            _interactionMode = Rotate;
         }
+    }
+
+    if (_interactionMode != None) {
+        interactionBeginEvent(event);
     }
 }
 
 void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
+    if (_interactionMode != None) {
+        interactionEndEvent(event);
+    }
+
     event->accept();
 
     Item::mouseReleaseEvent(event);
 
-    _mode = None;
+    _interactionMode = None;
 }
 
 void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
@@ -464,7 +488,7 @@ void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 
     QPointF newMousePos( event->scenePos() );
 
-    switch (_mode) {
+    switch (_interactionMode) {
     case None:
     {
         Item::mouseMoveEvent(event);
@@ -488,7 +512,7 @@ void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             }
 
             // Calculate mouse movement in grid units
-            QPointF d( newMousePos - _lastMousePosWithGridMove );
+            QPointF d( newMousePos - _interactionLastMousePosWithGridMove );
 
             // Rotate mouse movement
             {
@@ -507,14 +531,14 @@ void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             }
 
             // Track this
-            _lastMousePosWithGridMove = newMousePos;
+            _interactionLastMousePosWithGridMove = newMousePos;
 
             // Perform resizing
             qreal newX = posX();
             qreal newY = posY();
             qreal newWidth = _size.width();
             qreal newHeight = _size.height();
-            switch (_resizeHandle) {
+            switch (_interactionResizeHandle) {
             case RectanglePointTopLeft:
                 newX += dx;
                 newY += dy;
@@ -588,7 +612,7 @@ void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             newPos += correction;
 
             // Apply
-            scene()->undoStack()->push(new CommandNodeResize(this, newPos, newSize));
+            interactionChangeResizeEvent(newPos, newSize);
         }
 
         break;
@@ -607,9 +631,14 @@ void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
         if (QApplication::keyboardModifiers() == Qt::ShiftModifier) {
             angle = qRound(angle/15)*15;
         }
-        scene()->undoStack()->push(new CommandNodeRotate(this, angle));
+        interactionChangeRotateEvent(angle);
     }
     }
+}
+
+void Node::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    editStatusChange(true);
 }
 
 void Node::hoverEnterEvent(QGraphicsSceneHoverEvent* event)
@@ -672,6 +701,22 @@ void Node::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
     }
 }
 
+void Node::interactionBeginEvent(QGraphicsSceneMouseEvent* event) {
+    Q_UNUSED(event)
+}
+
+void Node::interactionChangeResizeEvent(QPointF newPos, QSizeF newSize) {
+    scene()->undoStack()->push(new QSchematic::CommandNodeResize(this, newPos, newSize));
+}
+
+void Node::interactionChangeRotateEvent(qreal newAngle) {
+    scene()->undoStack()->push(new QSchematic::CommandNodeRotate(this, newAngle));
+}
+
+void Node::interactionEndEvent(QGraphicsSceneMouseEvent* event) {
+    Q_UNUSED(event)
+}
+
 QRectF Node::boundingRect() const
 {
     // Body rect
@@ -701,6 +746,23 @@ QRectF Node::boundingRect() const
     }
 
     return rect;
+}
+
+// probably easiest way of fixing "area selection" bug (note rect-selection and clicks etc. use same collision-compare source). Should go into #QSchematic::Node
+auto Node::shape() const -> QPainterPath
+{
+    auto path = QPainterPath();
+
+    // selection rubber-bounds shouldn't match meta-decorations like rotation handles etc.
+    // NOTE: we assume user-interaction is rubber-selection if QSchematic::Node::mode() is `None`
+    if (scene()->isVisualUserInteractionInProgress() and _interactionMode == None) {
+        path.addRect(sizeRect());
+    }
+    else {
+        path.addRect(boundingRect());
+    }
+
+    return path;
 }
 
 void Node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -771,6 +833,77 @@ void Node::update()
     QGraphicsObject::update();
 }
 
+// It's more common with rectangular items than not, so let's offer it as a
+// default implementation
+auto Node::pointsOfInterest() const -> std::vector<QPointF>
+{
+    const auto rel = [
+        w = size().width(),
+        h = size().height()
+    ](qreal x, qreal y) -> QPointF {
+        return { x * w, y * h };
+    };
+
+    return {
+        rel(0.5, 0.5),
+        rel(0, 0),
+        rel(0.5, 0),
+        rel(1, 0),
+        rel(1, 0.5),
+        rel(1, 1),
+        rel(0.5, 1),
+        rel(0, 1),
+        rel(0, 0.5),
+    };
+}
+
+void Node::setHighlightPointOfInterest( const std::optional<QPointF>& point )
+{
+    _highlightPointOfInterest = point;
+}
+
+auto Node::highlightPointOfInterest() -> const std::optional<QPointF>
+{
+    return _highlightPointOfInterest;
+}
+
+void Node::paintPointOfInterest( QPainter& painter )
+{
+    // Don't do anything if there's no point of interest
+    if ( not _highlightPointOfInterest.has_value() ) {
+        return;
+    }
+
+    // Determine rect
+    const auto handleSizing = _settings.resizeHandleSize;
+    const QPointF& p = _highlightPointOfInterest.value();
+    QRectF rect( p+QPointF( -handleSizing, -handleSizing ), p + QPointF( handleSizing, handleSizing ) );
+
+    // Pen
+    QPen pen;
+    pen.setCosmetic( true );
+    pen.setStyle( Qt::SolidLine );
+    pen.setColor( QStringLiteral( "#6ebf75" ) );
+    pen.setWidth( 4 );
+
+    // Brush
+    QBrush brush;
+    brush.setStyle( Qt::NoBrush );
+
+    // Render
+    painter.setPen( pen );
+    painter.setBrush( brush );
+    painter.drawEllipse( rect );
+}
+
+auto Node::tempSelectabilityHackPropagationPass(bool flag) -> void
+{
+    if ( auto parent = dynamic_cast<Node*>(this->parentItem()) ) {
+        parent->tempSelectabilityHackPropagationPass(flag);
+    }
+}
+
+
 bool Node::canSnapToGrid() const
 {
     // Only snap when the rotation is a multiple of 90
@@ -801,9 +934,21 @@ QVariant Node::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
         return newPos;
     }
 
+    case ItemSelectedHasChanged:
+        if (isSelected() == false) {
+            editStatusChange(false);
+        }
+        break;
+
     default:
         return Item::itemChange(change, value);
     }
+}
+
+void Node::editStatusChange(bool enabled)
+{
+    Q_UNUSED(enabled);
+    // default is noop
 }
 
 void Node::paintResizeHandles(QPainter& painter)

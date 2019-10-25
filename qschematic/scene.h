@@ -52,6 +52,7 @@ namespace QSchematic {
         QList<std::shared_ptr<Item>> items(int itemType) const;
         QList<std::shared_ptr<Item>> itemsAt(const QPointF& scenePos, Qt::SortOrder order = Qt::DescendingOrder) const;
         std::vector<std::shared_ptr<Item>> selectedItems() const;
+        bool isVisualUserInteractionInProgress() const;
         QList<std::shared_ptr<Node>> nodes() const;
         bool addWire(const std::shared_ptr<Wire> wire);
         bool removeWire(const std::shared_ptr<Wire> wire);
@@ -121,6 +122,15 @@ namespace QSchematic {
         QMap<std::shared_ptr<Item>, QPointF> _initialItemPositions;
         QPointF _initialCursorPosition;
         QUndoStack* _undoStack;
+
+        // this flow is used so that we can dirty-fix rubber-selection to consider only item-body and ignore decorations while still maintaining interaction-decorations functionality as wanted
+        enum VisualUserInteractionState {
+            None = 0,
+            Initiated = 1,
+            Progressing = 2
+        };
+
+        VisualUserInteractionState _visualUserInteractionState;
 
     private slots:
         void itemMoved(const Item& item, const QVector2D& movedBy);

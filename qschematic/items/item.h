@@ -128,6 +128,7 @@ namespace QSchematic {
         bool highlightEnabled() const;
         QPixmap toPixmap(QPointF& hotSpot, qreal scale = 1.0);
         virtual void update();
+        Scene* scene() const;
 
     signals:
         void moved(Item& item, const QVector2D& movedBy);
@@ -141,8 +142,6 @@ namespace QSchematic {
 
         void copyAttributes(Item& dest) const;
         void addItemTypeIdToContainer(Gpds::Container& container) const;
-
-        Scene* scene() const;
 
         bool isHighlighted() const;
         virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;

@@ -18,6 +18,8 @@
 #include "items/wirenet.h"
 #include "utils/itemscontainerutils.h"
 
+#include <QDebug>
+
 using namespace QSchematic;
 
 Scene::Scene(QObject* parent) :
@@ -296,6 +298,7 @@ bool Scene::addItem(const std::shared_ptr<Item> item)
 
 bool Scene::removeItem(const std::shared_ptr<Item> item)
 {
+    qDebug() << "Scene::removeItem ->" << item.get();
     if (!item) {
         return false;
     }
@@ -307,11 +310,11 @@ bool Scene::removeItem(const std::shared_ptr<Item> item)
     //
     // Remove from scene (if necessary)
     if (item->QGraphicsItem::scene()) {
-       QGraphicsScene::removeItem(item.get());
+        // TODO TEST XXX
+        //QGraphicsScene::removeItem(item.get());
+        item->hide();
     }
 
-    // NOTE: because of #T1517 workaround the item will still exist in scene
-    // when below signal is sent
     emit itemRemoved(item);
 
     // Remove keep-alive reference
@@ -348,6 +351,11 @@ QList<std::shared_ptr<Item>> Scene::items(int itemType) const
 std::vector<std::shared_ptr<Item>> Scene::selectedItems() const
 {
     return ItemUtils::mapItemListToSharedPtrList<std::vector>(QGraphicsScene::selectedItems());
+}
+
+bool Scene::isVisualUserInteractionInProgress() const
+{
+    return _visualUserInteractionState == Progressing;
 }
 
 QList<std::shared_ptr<Node>> Scene::nodes() const
@@ -712,6 +720,7 @@ void Scene::addWireNet(const std::shared_ptr<WireNet> wireNet)
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     event->accept();
+    _visualUserInteractionState = Initiated;
 
     switch (_mode) {
     case NormalMode:
@@ -806,6 +815,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
 void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
     event->accept();
+    _visualUserInteractionState = None;
 
     switch (_mode) {
     case NormalMode:
@@ -856,6 +866,10 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
     event->accept();
+
+    if (_visualUserInteractionState == Initiated) {
+        _visualUserInteractionState = Progressing;
+    }
 
     // Retrieve the new mouse position
     QPointF newMousePos = event->scenePos();

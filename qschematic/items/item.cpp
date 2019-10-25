@@ -310,6 +310,7 @@ void Item::hoverEnterEvent(QGraphicsSceneHoverEvent* event)
     setHighlighted(true);
     emit highlightChanged(*this, true);
 
+    // TODO TEMP XXX
     update();
 }
 
@@ -320,6 +321,7 @@ void Item::hoverLeaveEvent(QGraphicsSceneHoverEvent* event)
     setHighlighted(false);
     emit highlightChanged(*this, false);
 
+// TODO TEMP XXX
     update();
 }
 
@@ -366,7 +368,9 @@ void Item::rotChanged()
 void Item::update()
 {
     // All transformations happen around the center of the item
-    setTransformOriginPoint(boundingRect().width()/2, boundingRect().height()/2);
+
+    // TODO TEMP XXX
+//    setTransformOriginPoint(boundingRect().width()/2, boundingRect().height()/2);
 
     // Base class
     QGraphicsObject::update();

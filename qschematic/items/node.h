@@ -10,6 +10,8 @@ class QGraphicsSceneHoverEvent;
 
 namespace QSchematic {
 
+    auto get_item_maybe_node(const Gpds::Container& container) -> Gpds::Container*;
+
     class Connector;
     class Label;
 
@@ -18,10 +20,10 @@ namespace QSchematic {
         Q_OBJECT
         Q_DISABLE_COPY(Node)
 
-    signals:
+        signals:
         void sizeChanged();
 
-    public:
+        public:
         enum Mode {
             None,
             Resize,
@@ -63,24 +65,38 @@ namespace QSchematic {
         bool connectorsSnapToGrid() const;
         void alignConnectorLabels() const;
 
-        /**
-         * @brief not really an event per se, but this seems the best way to
-         * name it, all things considered. There are many items currently
-         * that need to react to size-change and signal to self is boilerplaty
-         */
-        virtual auto sizeChangedEvent() -> void;
-
+        // "Real" ui-events
         virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
         virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
         virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+        virtual auto mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) -> void  override;
         virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
         virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
         virtual void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
+
+        // "Synthetic" higher order events
+        virtual auto interactionBeginEvent(QGraphicsSceneMouseEvent *event) -> void;
+        virtual auto interactionEndEvent(QGraphicsSceneMouseEvent *event) -> void;
+        virtual auto interactionChangeResizeEvent(QPointF newPos, QSizeF newSize) -> void;
+        virtual auto interactionChangeRotateEvent(qreal newAngle) -> void;
+        virtual auto sizeChangedEvent() -> void;
+        virtual auto editStatusChange(bool enabled) -> void;
+
+        virtual auto itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) -> QVariant  override;
+
         virtual QRectF boundingRect() const override;
-        QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override;
+        virtual QPainterPath shape() const override;
+
         virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
         virtual bool canSnapToGrid() const;
         virtual void update() override;
+
+        virtual auto pointsOfInterest() const -> std::vector<QPointF>;
+        auto setHighlightPointOfInterest( const std::optional<QPointF>& point ) -> void;
+        auto highlightPointOfInterest() -> const std::optional<QPointF>;
+        virtual void paintPointOfInterest( QPainter& painter );
+
+        virtual auto tempSelectabilityHackPropagationPass(bool flag) -> void;
 
     protected:
         void copyAttributes(Node& dest) const;
@@ -91,17 +107,18 @@ namespace QSchematic {
         virtual void paintRotateHandle(QPainter& painter);
 
     private:
-        Mode _mode;
-        QPointF _lastMousePosWithGridMove;
-        RectanglePoint _resizeHandle;
+        Mode _interactionMode;
+        RectanglePoint _interactionResizeHandle;
+        QPointF _interactionLastMousePosWithGridMove;
         QSizeF _size;
         bool _allowMouseResize;
         bool _allowMouseRotate;
         bool _connectorsMovable;
-        Connector::SnapPolicy _connectorsSnapPolicy;
         bool _connectorsSnapToGrid;
+        Connector::SnapPolicy _connectorsSnapPolicy;
         QList<std::shared_ptr<Connector>> _connectors;
         QList<std::shared_ptr<Connector>> _specialConnectors;  // Ignored in serialization and deep-copy
+        std::optional<QPointF> _highlightPointOfInterest;
     };
 
 }
