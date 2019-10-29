@@ -303,16 +303,11 @@ bool Scene::removeItem(const std::shared_ptr<Item> item)
         return false;
     }
 
-    // NOTE: Call removed because of #T1517
-    // NOTE2: When items deleted by _user_ (_not clear!_) — it's retained in
-    //  DeleteCommand and therefore remains in scene. Returns to explicit remove,
-    //  workarounds crash by disabling index instead as compensation.
-    //
+    disconnectItem(*(item.get()));
+
     // Remove from scene (if necessary)
     if (item->QGraphicsItem::scene()) {
-        // TODO TEST XXX
-        //QGraphicsScene::removeItem(item.get());
-        item->hide();
+        QGraphicsScene::removeItem(item.get());
     }
 
     emit itemRemoved(item);
@@ -1181,6 +1176,14 @@ void Scene::setupNewItem(Item& item)
     // Connections
     connect(&item, &Item::moved, this, &Scene::itemMoved);
     connect(&item, &Item::rotated, this, &Scene::itemRotated);
+}
+
+// Explicit disconnect added in further investigation of crashes
+void Scene::disconnectItem(Item& item)
+{
+    // Connections
+    disconnect(&item, &Item::moved, this, &Scene::itemMoved);
+    disconnect(&item, &Item::rotated, this, &Scene::itemRotated);
 }
 
 QList<QPointF> Scene::connectionPoints() const

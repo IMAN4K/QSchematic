@@ -94,6 +94,7 @@ namespace QSchematic {
     private:
         void renderCachedBackground();
         void setupNewItem(Item& item);
+        void disconnectItem(Item& item);
         void addWireNet(const std::shared_ptr<WireNet> wireNet);
         std::shared_ptr<Item> sharedItemPointer(const Item& item) const;
 

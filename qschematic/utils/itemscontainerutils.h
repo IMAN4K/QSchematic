@@ -23,14 +23,17 @@ auto mapItemListToSharedPtrList(ContainerT itemList) -> OutContainerT<std::share
 
     for (auto& item : itemList) {
         if (auto qitem = dynamic_cast<Item*>(item)) { //  qgraphicsitem_cast<Item*>(item)) {
+            // Note: what we'd really want to identify is items that haven't
+            // been alloced properly, but there seem to be no plain way of
+            // checking if default_instance/bad_alloc (?)
             if (auto qsitem = qitem->sharedPtr()) {
                 out.push_back(qsitem);
             }
             else {
-                qDebug() << endl << "item without shared-ptr: " << qitem << endl;
+                qDebug() << endl << "mapItemListToSharedPtrList<...>(...) -> skips item without shared-ptr: " << qitem << endl;
             }
         } else {
-            qDebug() << endl << "item without QS::ancestry" << item << endl;
+            qDebug() << endl << "mapItemListToSharedPtrList<...>(...) -> skips item without QS::Item ancestry" << item << endl;
         }
     }
 
