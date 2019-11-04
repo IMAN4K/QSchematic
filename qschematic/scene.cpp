@@ -20,6 +20,11 @@
 
 #include <QDebug>
 
+
+
+
+
+
 using namespace QSchematic;
 
 Scene::Scene(QObject* parent) :
@@ -30,6 +35,7 @@ Scene::Scene(QObject* parent) :
     _movingNodes(false)
 {
     // NOTE: See #T1517
+    // TODO: try without again after fix-fixes confirmed!
     setItemIndexMethod(ItemIndexMethod::NoIndex);
 
     // Undo stack
@@ -276,6 +282,8 @@ void Scene::clear()
 
 bool Scene::addItem(const std::shared_ptr<Item> item)
 {
+    qDebug() << "Scene::addItem ->" << item;
+
     // Sanity check
     if (!item) {
         return false;
@@ -298,7 +306,8 @@ bool Scene::addItem(const std::shared_ptr<Item> item)
 
 bool Scene::removeItem(const std::shared_ptr<Item> item)
 {
-    qDebug() << "Scene::removeItem ->" << item.get();
+    qDebug() << "Scene::removeItem ->" << item;
+
     if (!item) {
         return false;
     }
@@ -325,7 +334,28 @@ QList<std::shared_ptr<Item>> Scene::items() const
 
 QList<std::shared_ptr<Item>> Scene::itemsAt(const QPointF &scenePos, Qt::SortOrder order) const
 {
-    return ItemUtils::mapItemListToSharedPtrList<QList>(QGraphicsScene::items(scenePos, Qt::IntersectsItemShape, order));
+    // OLD_STYLE
+    QList<std::shared_ptr<Item>> items;
+
+    for (auto& graphicsItem : QGraphicsScene::items(scenePos, Qt::IntersectsItemShape, order)) {
+        Item* item = qgraphicsitem_cast<Item*>(graphicsItem);
+        if (item) {
+            auto sharedItem = sharedItemPointer( *item );
+            items << sharedItem;
+        }
+    }
+
+
+    // NEW_STYLE
+    auto new_items = ItemUtils::mapItemListToSharedPtrList<QList>(QGraphicsScene::items(scenePos, Qt::IntersectsItemShape, order));
+
+
+    // VALIDATION
+    if ( items != new_items ) {
+        qDebug() << endl << "old_items != new_items!" << items << " — " << new_items << endl;
+    }
+
+    return items;
 }
 
 QList<std::shared_ptr<Item>> Scene::items(int itemType) const
@@ -343,9 +373,34 @@ QList<std::shared_ptr<Item>> Scene::items(int itemType) const
     return items;
 }
 
-std::vector<std::shared_ptr<Item>> Scene::selectedItems() const
+//std::vector<std::shared_ptr<Item>> Scene::selectedItems() const
+QVector<std::shared_ptr<Item>> Scene::selectedItems() const
 {
-    return ItemUtils::mapItemListToSharedPtrList<std::vector>(QGraphicsScene::selectedItems());
+    // OLD_STYLE
+    // Retrieve items from QGraphicsScene
+    const auto& rawItems = QGraphicsScene::selectedItems();
+
+    // Retrieve corresponding smart pointers
+    QVector<std::shared_ptr<Item>> items(rawItems.count());
+//    std::vector<std::shared_ptr<Item>> items; // rawItems.count());
+//    int i = 0;
+    for (auto& item : _items) {
+        if (rawItems.contains(item.get())) {
+            // items[i++] = item;
+            items.push_back(item);
+        }
+    }
+
+    // NEW_STYLE
+    auto new_items = ItemUtils::mapItemListToSharedPtrList<QVector>(QGraphicsScene::selectedItems());
+//    auto new_items = ItemUtils::mapItemListToSharedPtrList<std::vector>(QGraphicsScene::selectedItems());
+
+    // VALIDATION
+    if ( items != new_items ) {
+        qDebug() << endl << "old_items != new_items!" << items << " — " << new_items << endl;
+    }
+
+    return items;
 }
 
 bool Scene::isVisualUserInteractionInProgress() const
@@ -540,8 +595,24 @@ void Scene::itemRotated(const Item& item, const qreal rotation)
 
 void Scene::itemHighlightChanged(const Item& item, bool isHighlighted)
 {
+    // OLD_STYLE:
+
     // Retrieve the corresponding smart pointer
-    if (auto sharedPointer = item.sharedPtr()) {
+    auto sharedPointer = sharedItemPointer(item);
+//    if (not sharedPointer) {
+//        return;
+//    }
+
+    // NEW_STYLE:
+    // Retrieve the corresponding smart pointer
+    auto new_sharedPointer = item.sharedPtr();
+
+    // VALIDATE:
+    if (sharedPointer != new_sharedPointer) {
+        qDebug() << endl << "sharedPointer != new_sharedPointer" << sharedPointer.get() << " — " << new_sharedPointer.get() << endl;
+    }
+
+    if (sharedPointer) {
         // Let the world know
         emit itemHighlightChanged(sharedPointer, isHighlighted);
     }
@@ -580,7 +651,34 @@ void Scene::wirePointMoved(Wire& rawWire, WirePoint& point)
 {
     Q_UNUSED(point)
 
-    auto wire = std::dynamic_pointer_cast<Wire>(rawWire.sharedPtr());
+    // OLD_STYLE:
+
+    // Retrieve corresponding shared ptr
+    std::shared_ptr<Wire> old_wire;
+    for (auto& item : _items) {
+        std::shared_ptr<Wire> wireItem = std::dynamic_pointer_cast<Wire>(item);
+        if (!wireItem) {
+            continue;
+        }
+
+        if (wireItem.get() == &rawWire) {
+            old_wire = wireItem;
+            break;
+        }
+    }
+
+
+    // NEW_STYLE:
+    auto new_wire = std::dynamic_pointer_cast<Wire>(rawWire.sharedPtr());
+
+    if (old_wire != new_wire) {
+        qDebug() << endl << "old_wire != wire" << old_wire.get() << " — " << new_wire.get() << endl;
+    }
+
+
+    auto wire = old_wire;
+
+
 
     // Remove the Wire from the current WireNet if it is part of a WireNet
     auto it = _nets.begin();
@@ -712,6 +810,31 @@ void Scene::addWireNet(const std::shared_ptr<WireNet> wireNet)
     _nets.append(wireNet);
 }
 
+// OLD_STYLE:
+std::shared_ptr<Item> Scene::sharedItemPointer(const Item& item) const
+{
+    // Check for all known _items
+    for (const auto& sharedPointer : _items) {
+        if (sharedPointer.get() == &item) {
+            return sharedPointer;
+        }
+    }
+
+    // Check for connectors
+    if (item.parentItem()) {
+        const Node* node = qgraphicsitem_cast<const Node*>( item.parentItem() );
+        if ( node ) {
+            for ( const auto& connector : node->connectors() ) {
+                if ( connector.get() == &item ) {
+                    return connector;
+                }
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     event->accept();
@@ -722,6 +845,11 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
     {
         // Reset stuff
         _newWire.reset();
+
+
+        _dbg_inspect_shptr_registry();
+        qDebug() << "Scene::mousePressEvent ->" << _items;
+
 
         // Handle selections
         QGraphicsScene::mousePressEvent(event);

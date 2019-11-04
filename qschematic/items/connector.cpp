@@ -91,6 +91,7 @@ void Connector::copyAttributes(Connector& dest) const
     Item::copyAttributes(dest);
 
     // Label
+    qDebug() << "deepCopy's" << std::dynamic_pointer_cast<Label>(_label->deepCopy()) << _label->deepCopy();
     dest._label = std::dynamic_pointer_cast<Label>(_label->deepCopy());
     dest._label->setParentItem(&dest);
 

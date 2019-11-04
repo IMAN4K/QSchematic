@@ -432,10 +432,7 @@ auto Node::sizeChangedEvent() -> void
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
-    event->accept();
-
-    // Let the base class handle selection and so on
-    Item::mousePressEvent(event);
+    qDebug() << "Node::mousePressEvent ->" << this << this->weakPtr();
 
     // Presume no mode
     _interactionMode = None;
@@ -446,6 +443,7 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
         auto it = handles.constBegin();
         while (it != handles.constEnd()) {
             if (it.value().contains(event->pos().toPoint())) {
+                event->accept();
                 _interactionMode = Resize;
                 _interactionLastMousePosWithGridMove = event->scenePos();
                 _interactionResizeHandle = it.key();
@@ -458,8 +456,18 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
     // Rotation
     if (isSelected() && _allowMouseRotate) {
         if (rotationHandle().contains(event->pos().toPoint())) {
+            event->accept();
             _interactionMode = Rotate;
         }
+    }
+
+    if (_interactionMode == None) {
+        qDebug() << "Node::mousePressEvent -> call Item::super..." << event;
+
+        // Let the base class handle selection and so on
+        Item::mousePressEvent(event);
+
+        qDebug() << "Node::mousePressEvent -> call Item::super... /";
     }
 
     if (_interactionMode != None) {
@@ -469,6 +477,8 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
 void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
+    qDebug() << "Node::mouseReleaseEvent ->" << this << this->weakPtr();
+
     if (_interactionMode != None) {
         interactionEndEvent(event);
     }
@@ -482,6 +492,8 @@ void Node::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 
 void Node::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
+    qDebug() << "Node::mouseMoveEvent ->" << this << this->weakPtr();
+
     Q_ASSERT( scene() );
 
     event->accept();

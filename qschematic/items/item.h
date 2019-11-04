@@ -9,60 +9,143 @@
 
 #include <QDebug>
 
+
+
+
+template <typename ...T>
+auto operator <<(QDebug debug, const std::weak_ptr<T...>& val) -> QDebug
+{
+    auto raw_ptr = val.lock().get();
+    debug << "std::weak_ptr{ "
+          << raw_ptr
+          << ", use_count: "
+          << val.use_count()
+          << " }";
+    return debug;
+}
+
+template <typename ...T>
+auto operator <<(QDebug debug, const std::shared_ptr<T...>& val) -> QDebug
+{
+    debug << "std::shared_ptr{ "
+          << val.get()
+          << ", use_count: "
+          << val.use_count()
+          << " }";
+    return debug;
+}
+
+inline
+    auto operator <<(QDebug debug, const std::string& val) -> QDebug
+{
+    debug << val.c_str();
+    return debug;
+}
+
+//template <typename ...T>
+//auto operator <<(QDebug debug, const std::vector<std::shared_ptr<T...>>& val) -> QDebug
+//{
+//    for ( auto item : val ) {
+//        debug << "    std::shared_ptr{ "
+//              << item.get()
+//              << ", use_count: "
+//              << item.use_count()
+//              << " }"
+//              << endl;
+//    }
+//    return debug;
+//}
+
+
+
+
+
+
+
+
 namespace QSchematic {
 
     class Scene;
 
 
+    class Item;
+
+    using GlobalShPtrRegBaseT = Item;
 
     // TODO
     // - make all below `static` member of class Item
     // - make one public static get method also (to up-down cast QG-ptrs)
     // - explicit _maybe version, others will assert-throw if expectations unmet
-    extern std::unordered_map<const QGraphicsItem*, std::weak_ptr<QGraphicsItem>>
-        global_items_shared_ptr_registry;
+    extern std::unordered_map<const GlobalShPtrRegBaseT*, std::weak_ptr<GlobalShPtrRegBaseT>>
+        _global_items_shared_ptr_registry;
 
-    template <typename wantedT = QGraphicsItem, typename T>
-    auto obtain_registry_weak_pointer(T* ptr) -> std::weak_ptr<wantedT>
+    extern int _global_alloc_counter;
+
+    inline
+    auto _dbg_inspect_shptr_registry() -> void
     {
-        auto qg_ptr = static_cast<const QGraphicsItem*>(ptr);
-        if ( global_items_shared_ptr_registry.find(qg_ptr) != end(global_items_shared_ptr_registry) ) {
-            auto sh_ptr = global_items_shared_ptr_registry.at(qg_ptr);
-            if ( not sh_ptr.expired() ) {
-                return sh_ptr;
+        auto _d = qDebug();
+        _d << endl << "{";
+        for (auto pair : _global_items_shared_ptr_registry ) {
+            _d << "    " << pair << endl;
+        }
+        _d << "}" << endl;
+    }
+
+//    template <typename WantedT = GlobalShPtrRegBaseT, typename T>
+    template <typename T>
+    auto obtain_registry_weak_pointer(T* ptr) -> std::weak_ptr<GlobalShPtrRegBaseT>
+    {
+        auto qg_ptr = static_cast<const GlobalShPtrRegBaseT*>(ptr);
+        // TODO: avoid safety checks if NDEBUG
+        if ( _global_items_shared_ptr_registry.find(qg_ptr) != end(_global_items_shared_ptr_registry) ) {
+//            std::weak_ptr<WantedT> w_ptr = _global_items_shared_ptr_registry.at(qg_ptr);
+            auto w_ptr = _global_items_shared_ptr_registry.at(qg_ptr);
+            if ( not w_ptr.expired() ) {
+                qDebug() << "SHPTR-REG => got ptr" << ptr << " => " << w_ptr;
+                return w_ptr;
             }
             else {
-                qDebug() << "SHPTR-REG => got ptr, but it's not alive anymore!";
+                qDebug() << "SHPTR-REG => got ptr, but it's not alive anymore!" << ptr;
                 return {};
             }
         }
         else {
-            qDebug() << "SHPTR-REG => no matching shared-ptr found!";
+            qDebug() << "SHPTR-REG => no matching shared-ptr found!" << ptr;
             return {};
         }
     }
 
-    template <typename wantedT = QGraphicsItem, typename T>
-    auto obtain_registry_shared_pointer(T* ptr) -> std::shared_ptr<wantedT>
+    template <typename WantedT = GlobalShPtrRegBaseT, typename T>
+    auto obtain_registry_shared_pointer(T* ptr) -> std::shared_ptr<WantedT>
     {
         auto w_ptr = obtain_registry_weak_pointer(ptr);
-        auto sh_ptr = w_ptr.lock();
+        std::shared_ptr<WantedT> sh_ptr = w_ptr.lock();
         return sh_ptr;
     }
 
     template <typename InstanceT, typename ...ArgsT>
     auto mk_sh(ArgsT ...args) -> std::shared_ptr<InstanceT>
     {
+        auto count = ++_global_alloc_counter;
+        qDebug() << "mk_sh<...>() -> (" << count << ")";
+            //        auto raw_ptr = new InstanceT(args...);
+//        auto sh_ptr = std::shared_ptr<InstanceT>(raw_ptr);
         auto sh_ptr = std::make_shared<InstanceT>(args...);
-        auto root_type_ptr = static_cast<QGraphicsItem*>(sh_ptr.get());
-        global_items_shared_ptr_registry[root_type_ptr] = sh_ptr;
+        auto root_type_ptr = static_cast<GlobalShPtrRegBaseT*>(sh_ptr.get());
+        qDebug() << "mk_sh... (" << count << ")" << root_type_ptr << sh_ptr;
+
+        // TODO XXX
+        if (   true   ) {
+            _global_items_shared_ptr_registry.insert({root_type_ptr, sh_ptr});
+        }
+
+        qDebug() << "mk_sh<...>() -> / (" << count << ") registry.size = " << _global_items_shared_ptr_registry.size() << endl;
         return sh_ptr;
     }
-
-    // TODO: get_shptr_reg_stats()
     // TODO: shptr_reg_cleanup()
     // TODO: register_shptr_reg_entry(shptr/weakptr)
-    // TODO: make_shared<>() that automatically registers (preferably also TIMEPOINT/SERIAL and/or stack-point)
+    // TODO: mk_sh<>() that automatically registers (preferably also TIMEPOINT/SERIAL and/or stack-point)
     // TODO: assert_shptr_dead(shptr)
     // TODO: assert_shptr_alive(shptr)
 
@@ -95,6 +178,7 @@ namespace QSchematic {
         const QString JSON_ID_STRING = QStringLiteral("type_id");
 
         Item(int type, QGraphicsItem* parent = nullptr);
+        virtual ~Item()  override;
 
         /**
          * These funcs should be the only source for obtaining a canonical
@@ -130,19 +214,19 @@ namespace QSchematic {
 //            }
         }
 
-        template <typename RetT = Item>
-        auto weakPtr() const -> std::weak_ptr<const RetT>
+        template <typename RetT = GlobalShPtrRegBaseT>
+        auto weakPtr() const -> std::weak_ptr<RetT>
         {
             auto w_ptr = obtain_registry_weak_pointer(this);
 //            if constexpr (std::is_same_v<RetT, Item>) {
 //                return w_ptr;
 //            }
 //            else {
-                return std::dynamic_pointer_cast<const RetT>(w_ptr);
+                return w_ptr;
 //            }
         }
 
-        template <typename RetT = Item>
+        template <typename RetT = GlobalShPtrRegBaseT>
         auto weakPtr() -> std::weak_ptr<RetT>
         {
             auto w_ptr = obtain_registry_weak_pointer(this);
@@ -150,7 +234,8 @@ namespace QSchematic {
 //                return w_ptr;
 //            }
 //            else {
-                return std::dynamic_pointer_cast<RetT>(w_ptr);
+//            return std::dynamic_pointer_cast<RetT>(w_ptr);
+            return w_ptr;
 //            }
         }
         /// @}

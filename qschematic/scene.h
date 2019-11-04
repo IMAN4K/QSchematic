@@ -51,7 +51,12 @@ namespace QSchematic {
         QList<std::shared_ptr<Item>> items() const;
         QList<std::shared_ptr<Item>> items(int itemType) const;
         QList<std::shared_ptr<Item>> itemsAt(const QPointF& scenePos, Qt::SortOrder order = Qt::DescendingOrder) const;
-        std::vector<std::shared_ptr<Item>> selectedItems() const;
+
+        // OLD_STYLE:
+        QVector<std::shared_ptr<Item>> selectedItems() const;
+        // NEW_STYLE:
+//        std::vector<std::shared_ptr<Item>> selectedItems() const;
+
         bool isVisualUserInteractionInProgress() const;
         QList<std::shared_ptr<Node>> nodes() const;
         bool addWire(const std::shared_ptr<Wire> wire);
@@ -71,9 +76,9 @@ namespace QSchematic {
     signals:
         void modeChanged(int newMode);
         void isDirtyChanged(bool isDirty);
-        void itemAdded(const std::shared_ptr<const Item> item);
-        void itemRemoved(const std::shared_ptr<const Item> item);
-        void itemHighlightChanged(const std::shared_ptr<const Item> item, bool isHighlighted);
+        void itemAdded(const std::shared_ptr<const Item>& item);
+        void itemRemoved(const std::shared_ptr<const Item>& item);
+        void itemHighlightChanged(const std::shared_ptr<const Item>& item, bool isHighlighted);
 
     protected:
         virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

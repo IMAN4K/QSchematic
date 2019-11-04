@@ -9,10 +9,10 @@
 using namespace QSchematic;
 
 namespace QSchematic {
+    std::unordered_map<const GlobalShPtrRegBaseT*, std::weak_ptr<GlobalShPtrRegBaseT>>
+        _global_items_shared_ptr_registry = {};
 
-std::unordered_map<const QGraphicsItem*, std::weak_ptr<QGraphicsItem>>
-    global_items_shared_ptr_registry = {};
-
+    int _global_alloc_counter = 0;
 }
 
 Item::Item(int type, QGraphicsItem* parent) :
@@ -23,6 +23,7 @@ Item::Item(int type, QGraphicsItem* parent) :
     _highlighted(false),
     _oldRot{0}
 {
+    qDebug() << "Item::Item -> (" << _global_alloc_counter << ")" << this;
     // Misc
     setAcceptHoverEvents(true);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
@@ -31,6 +32,11 @@ Item::Item(int type, QGraphicsItem* parent) :
     connect(this, &Item::xChanged, this, &Item::posChanged);
     connect(this, &Item::yChanged, this, &Item::posChanged);
     connect(this, &Item::rotationChanged, this, &Item::rotChanged);
+}
+
+Item::~Item()
+{
+    qDebug() << "Item::~Item ->" << this << this->weakPtr();
 }
 
 Gpds::Container Item::toContainer() const

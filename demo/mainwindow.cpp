@@ -37,6 +37,8 @@ const QString FILE_FILTERS = "XML (*.xml)";
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    qDebug() << endl << endl << "MainWindow::MainWindow ->" << endl;
+
     // Setup the custom item factory
     auto func = std::bind(&CustomItemFactory::fromContainer, std::placeholders::_1);
     QSchematic::ItemFactory::instance().setCustomItemsFactory(func);
@@ -335,8 +337,12 @@ void MainWindow::print()
 
 void MainWindow::demo()
 {
+    qDebug() << endl << endl << "MainWindow::demo() ->";
+
     _scene->clear();
     _scene->setSceneRect(-500, -500, 3000, 3000);
+
+    qDebug() << "MainWindow::demo() -> 2";
 
     auto o1 = QSchematic::mk_sh<Operation>();
     o1->addConnector(QSchematic::mk_sh<OperationConnector>(QPoint(0, 2), QStringLiteral("in")));
@@ -381,4 +387,6 @@ void MainWindow::demo()
     _scene->addItem(o4);
 
     _scene->undoStack()->clear();
+
+    qDebug() << "MainWindow::demo() -> /" << endl << endl;
 }

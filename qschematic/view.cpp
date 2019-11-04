@@ -110,6 +110,9 @@ void View::wheelEvent(QWheelEvent* event)
 
 void View::mouseMoveEvent(QMouseEvent *event)
 {
+//    _dbg_inspect_shptr_registry();
+    qDebug() << "View::mouseMoveEvent ->" << _scene->items();
+
     QGraphicsView::mouseMoveEvent(event);
 
     switch (_mode) {
@@ -127,6 +130,10 @@ void View::mouseMoveEvent(QMouseEvent *event)
 
 void View::mousePressEvent(QMouseEvent *event)
 {
+    _dbg_inspect_shptr_registry();
+//    qDebug() << scene()->items();
+    qDebug() << "View::mousePressEvent ->" << _scene->items();
+
     if (event->button() == Qt::MiddleButton) {
         setMode(PanMode);
         _panStart = event->pos();
@@ -140,6 +147,10 @@ void View::mousePressEvent(QMouseEvent *event)
 
 void View::mouseReleaseEvent(QMouseEvent *event)
 {
+    _dbg_inspect_shptr_registry();
+//    qDebug() << scene()->items();
+    qDebug() << "View::mouseReleaseEvent ->" << _scene->items();
+
     if (event->button() == Qt::MiddleButton) {
         setMode(NormalMode);
         viewport()->setCursor(Qt::ArrowCursor);

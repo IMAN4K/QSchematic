@@ -15,6 +15,8 @@ template <
 >
 auto mapItemListToSharedPtrList(ContainerT itemList) -> OutContainerT<std::shared_ptr<Item>>
 {
+    qDebug() << endl << "mapItemListToSharedPtrList<...>(...) ->" << endl;
+
     OutContainerT<std::shared_ptr<Item>> out;
 
     if constexpr (not std::is_same_v<OutContainerT<Item>, QList<Item>>) {
@@ -51,6 +53,8 @@ template <
     >
 auto mapItemListToOtherList(SrcContainerT itemList) -> OutContainerT<PtrMgrT<ItemT>>
 {
+    qDebug() << endl << "mapItemListToOtherList<...>(...) ->" << endl;
+
     OutContainerT<PtrMgrT<ItemT>> out;
 
     if constexpr (not std::is_same_v<OutContainerT<PtrMgrT<ItemT>>, QList<PtrMgrT<ItemT>>>) {
