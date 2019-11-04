@@ -23,7 +23,7 @@ Operation::Operation(int type, QGraphicsItem* parent) :
     QSchematic::Node(type, parent)
 {
     // Label
-    _label = std::make_shared<QSchematic::Label>();
+    _label = QSchematic::mk_sh<QSchematic::Label>();
     _label->setParentItem(this);
     _label->setVisible(true);
     _label->setMovable(true);
@@ -73,7 +73,7 @@ void Operation::fromContainer(const Gpds::Container& container)
 
 std::shared_ptr<QSchematic::Item> Operation::deepCopy() const
 {
-    auto clone = std::make_shared<Operation>(::ItemType::OperationType, parentItem());
+    auto clone = QSchematic::mk_sh<Operation>(::ItemType::OperationType, parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;
@@ -198,7 +198,7 @@ void Operation::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
         QAction* newConnector = new QAction;
         newConnector->setText("Add connector");
         connect(newConnector, &QAction::triggered, [this, event] {
-            auto connector = std::make_shared<OperationConnector>(event->pos().toPoint(), QStringLiteral("Unnamed"), this);
+            auto connector = QSchematic::mk_sh<OperationConnector>(event->pos().toPoint(), QStringLiteral("Unnamed"), this);
 
             if (scene()) {
                 scene()->undoStack()->push(new CommandNodeAddConnector(this, connector));

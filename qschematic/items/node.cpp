@@ -114,7 +114,7 @@ void Node::fromContainer(const Gpds::Container& container)
 
 std::shared_ptr<Item> Node::deepCopy() const
 {
-    auto clone = std::make_shared<Node>(type(), parentItem());
+    auto clone = QSchematic::mk_sh<Node>(type(), parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;

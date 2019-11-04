@@ -8,6 +8,13 @@
 
 using namespace QSchematic;
 
+namespace QSchematic {
+
+std::unordered_map<const QGraphicsItem*, std::weak_ptr<QGraphicsItem>>
+    global_items_shared_ptr_registry = {};
+
+}
+
 Item::Item(int type, QGraphicsItem* parent) :
     QGraphicsObject(parent),
     _type(type),

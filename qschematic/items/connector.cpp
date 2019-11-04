@@ -25,7 +25,7 @@ Connector::Connector(int type, const QPoint& gridPoint, const QString& text, QGr
     _wirePointIndex(-1)
 {
     // Label
-    _label = std::make_shared<Label>();
+    _label = QSchematic::mk_sh<Label>();
     _label->setParentItem(this);
     _label->setText(text);
 
@@ -77,7 +77,7 @@ void Connector::fromContainer(const Gpds::Container& container)
 
 std::shared_ptr<Item> Connector::deepCopy() const
 {
-    auto clone = std::make_shared<Connector>(type(), gridPos(), text(), parentItem());
+    auto clone = QSchematic::mk_sh<Connector>(type(), gridPos(), text(), parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;

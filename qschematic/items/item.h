@@ -6,14 +6,73 @@
 #include "../types.h"
 #include "../settings.h"
 
+
+#include <QDebug>
+
 namespace QSchematic {
 
     class Scene;
 
+
+
+    // TODO
+    // - make all below `static` member of class Item
+    // - make one public static get method also (to up-down cast QG-ptrs)
+    // - explicit _maybe version, others will assert-throw if expectations unmet
+    extern std::unordered_map<const QGraphicsItem*, std::weak_ptr<QGraphicsItem>>
+        global_items_shared_ptr_registry;
+
+    template <typename wantedT = QGraphicsItem, typename T>
+    auto obtain_registry_weak_pointer(T* ptr) -> std::weak_ptr<wantedT>
+    {
+        auto qg_ptr = static_cast<const QGraphicsItem*>(ptr);
+        if ( global_items_shared_ptr_registry.find(qg_ptr) != end(global_items_shared_ptr_registry) ) {
+            auto sh_ptr = global_items_shared_ptr_registry.at(qg_ptr);
+            if ( not sh_ptr.expired() ) {
+                return sh_ptr;
+            }
+            else {
+                qDebug() << "SHPTR-REG => got ptr, but it's not alive anymore!";
+                return {};
+            }
+        }
+        else {
+            qDebug() << "SHPTR-REG => no matching shared-ptr found!";
+            return {};
+        }
+    }
+
+    template <typename wantedT = QGraphicsItem, typename T>
+    auto obtain_registry_shared_pointer(T* ptr) -> std::shared_ptr<wantedT>
+    {
+        auto w_ptr = obtain_registry_weak_pointer(ptr);
+        auto sh_ptr = w_ptr.lock();
+        return sh_ptr;
+    }
+
+    template <typename InstanceT, typename ...ArgsT>
+    auto mk_sh(ArgsT ...args) -> std::shared_ptr<InstanceT>
+    {
+        auto sh_ptr = std::make_shared<InstanceT>(args...);
+        auto root_type_ptr = static_cast<QGraphicsItem*>(sh_ptr.get());
+        global_items_shared_ptr_registry[root_type_ptr] = sh_ptr;
+        return sh_ptr;
+    }
+
+    // TODO: get_shptr_reg_stats()
+    // TODO: shptr_reg_cleanup()
+    // TODO: register_shptr_reg_entry(shptr/weakptr)
+    // TODO: make_shared<>() that automatically registers (preferably also TIMEPOINT/SERIAL and/or stack-point)
+    // TODO: assert_shptr_dead(shptr)
+    // TODO: assert_shptr_alive(shptr)
+
+
+
     class Item :
         public QGraphicsObject,
-        public Gpds::Serialize,
-        public std::enable_shared_from_this<Item>
+        public Gpds::Serialize
+        //,
+        //public std::enable_shared_from_this<Item>
     {
         friend class CommandItemSetVisible;
 
@@ -48,45 +107,51 @@ namespace QSchematic {
         template <typename RetT = Item>
         auto sharedPtr() const -> std::shared_ptr<const RetT>
         {
-            if constexpr (std::is_same_v<RetT, Item>) {
-                return shared_from_this();
-            }
-            else {
-                return std::dynamic_pointer_cast<const RetT>(shared_from_this());
-            }
+            auto sh_ptr = obtain_registry_shared_pointer(this);
+
+//            if constexpr (std::is_same_v<RetT, Item>) {
+//                return sh_ptr;
+//            }
+//            else {
+                return std::dynamic_pointer_cast<const RetT>(sh_ptr);
+//            }
         }
 
         template <typename RetT = Item>
         auto sharedPtr() -> std::shared_ptr<RetT>
         {
-            if constexpr (std::is_same_v<RetT, Item>) {
-                return shared_from_this();
-            }
-            else {
-                return std::dynamic_pointer_cast<RetT>(shared_from_this());
-            }
+            auto sh_ptr = obtain_registry_shared_pointer(this);
+
+//            if constexpr (std::is_same_v<RetT, Item>) {
+//                return sh_ptr;
+//            }
+//            else {
+                return std::dynamic_pointer_cast<RetT>(sh_ptr);
+//            }
         }
 
         template <typename RetT = Item>
         auto weakPtr() const -> std::weak_ptr<const RetT>
         {
-            if constexpr (std::is_same_v<RetT, Item>) {
-                return weak_from_this();
-            }
-            else {
-                return std::dynamic_pointer_cast<const RetT>(weak_from_this());
-            }
+            auto w_ptr = obtain_registry_weak_pointer(this);
+//            if constexpr (std::is_same_v<RetT, Item>) {
+//                return w_ptr;
+//            }
+//            else {
+                return std::dynamic_pointer_cast<const RetT>(w_ptr);
+//            }
         }
 
         template <typename RetT = Item>
         auto weakPtr() -> std::weak_ptr<RetT>
         {
-            if constexpr (std::is_same_v<RetT, Item>) {
-                return weak_from_this();
-            }
-            else {
-                return std::dynamic_pointer_cast<RetT>(weak_from_this());
-            }
+            auto w_ptr = obtain_registry_weak_pointer(this);
+//            if constexpr (std::is_same_v<RetT, Item>) {
+//                return w_ptr;
+//            }
+//            else {
+                return std::dynamic_pointer_cast<RetT>(w_ptr);
+//            }
         }
         /// @}
 

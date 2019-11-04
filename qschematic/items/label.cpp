@@ -55,7 +55,7 @@ void Label::fromContainer(const Gpds::Container& container)
 
 std::shared_ptr<Item> Label::deepCopy() const
 {
-    auto clone = std::make_shared<Label>(type(), parentItem());
+    auto clone = QSchematic::mk_sh<Label>(type(), parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;

@@ -764,7 +764,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
                 if (_wireFactory) {
                     _newWire = _wireFactory();
                 } else {
-                    _newWire = std::make_shared<Wire>();
+                    _newWire = QSchematic::mk_sh<Wire>();
                 }
                 _undoStack->push(new CommandItemAdd(this, _newWire));
             }
