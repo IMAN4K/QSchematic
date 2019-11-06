@@ -6,8 +6,8 @@
 #include "../types.h"
 #include "../settings.h"
 
-
 #include <QDebug>
+
 
 
 
@@ -41,22 +41,6 @@ inline
     debug << val.c_str();
     return debug;
 }
-
-//template <typename ...T>
-//auto operator <<(QDebug debug, const std::vector<std::shared_ptr<T...>>& val) -> QDebug
-//{
-//    for ( auto item : val ) {
-//        debug << "    std::shared_ptr{ "
-//              << item.get()
-//              << ", use_count: "
-//              << item.use_count()
-//              << " }"
-//              << endl;
-//    }
-//    return debug;
-//}
-
-
 
 
 

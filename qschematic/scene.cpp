@@ -20,11 +20,6 @@
 
 #include <QDebug>
 
-
-
-
-
-
 using namespace QSchematic;
 
 Scene::Scene(QObject* parent) :
@@ -847,8 +842,8 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
         _newWire.reset();
 
 
-        _dbg_inspect_shptr_registry();
-        qDebug() << "Scene::mousePressEvent ->" << _items;
+//        _dbg_inspect_shptr_registry();
+        qDebug() << "Scene::mousePressEvent -> QGraphicsScene::mousePressEvent"; // << _items;
 
 
         // Handle selections
