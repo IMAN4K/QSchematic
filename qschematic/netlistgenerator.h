@@ -38,7 +38,7 @@ namespace QSchematic
             // Create a list of global nets (WireNets that share the same net name)
             std::vector<GlobalNet> globalNets;
             unsigned anonNetCounter = 0;
-            for (const auto& wireNet : scene.nets()) {
+            for (const auto& wireNet : scene.wireSystem()->nets()) {
                 // Sanity check
                 if (!wireNet) {
                     continue;
@@ -111,7 +111,8 @@ namespace QSchematic
                         }
 
                         // Create the Connector/Node pairs
-                        if (std::find(net.wires.begin(), net.wires.end(), templateConnector->attachedWire()) != net.wires.end()) {
+                        const auto* wire = scene.wireSystem()->attachedWire(connector).get();
+                        if (std::find(net.wires.begin(), net.wires.end(), wire) != net.wires.end()) {
 
                             // Create list of all nodes in this net
                             net.nodes.push_back(templateNode);

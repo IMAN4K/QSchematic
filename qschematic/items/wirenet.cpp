@@ -95,9 +95,9 @@ bool WireNet::addWire(const std::shared_ptr<Wire>& wire)
     if (wire->scene()) {
         for (const auto& connector : wire->scene()->connectors()) {
             if (connector->scenePos() == wire->pointsAbsolute().first()) {
-                connector->attachWire(wire.get(), 0);
+                _scene->wireSystem()->attachWireToConnector(wire, 0, connector);
             } else if (connector->scenePos() == wire->pointsAbsolute().last()) {
-                connector->attachWire(wire.get(), wire->pointsAbsolute().count() - 1);
+                _scene->wireSystem()->attachWireToConnector(wire, wire->pointsAbsolute().count() - 1, connector);
             }
         }
     }

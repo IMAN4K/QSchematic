@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QUndoStack>
 #include <gpds/serialize.hpp>
+#include "wire_system/wiresystem.h"
 #include "settings.h"
 #include "items/item.h"
 #include "items/wire.h"
@@ -54,22 +55,13 @@ namespace QSchematic {
         std::vector<std::shared_ptr<Item>> selectedItems() const;
         std::vector<std::shared_ptr<Item>> selectedTopLevelItems() const;
         QList<std::shared_ptr<Node>> nodes() const;
-        bool addWire(const std::shared_ptr<Wire>& wire);
-        bool removeWire(const std::shared_ptr<Wire> wire);
-        QList<std::shared_ptr<Wire>> wires() const;
-        QList<std::shared_ptr<WireNet>> nets() const;
-        QList<std::shared_ptr<WireNet>> nets(const std::shared_ptr<WireNet> wireNet) const;
-        std::shared_ptr<WireNet> net(const std::shared_ptr<Wire> wire) const;
-        QList<std::shared_ptr<WireNet>> netsAt(const QPoint& point);
         QList<QPointF> connectionPoints() const;
         QList<std::shared_ptr<Connector>> connectors() const;
-        std::shared_ptr<WireNet> netFromWire(const std::shared_ptr<Wire>& wire) const;
-        void removeWireNet(std::shared_ptr<WireNet> net);
+        std::shared_ptr<WireSystem> wireSystem() const;
 
         void undo();
         void redo();
         QUndoStack* undoStack() const;
-        void addWireNet(const std::shared_ptr<WireNet> wireNet);
 
     signals:
         void modeChanged(int newMode);
@@ -98,11 +90,6 @@ namespace QSchematic {
         void renderCachedBackground();
         void setupNewItem(Item& item);
         std::shared_ptr<Item> sharedItemPointer(const Item& item) const;
-        bool mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet);
-        void moveWireToNet(std::shared_ptr<Wire>& rawWire, std::shared_ptr<WireNet>& newNet) const;
-        void connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire);
-        void disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire);
-        QVector<std::shared_ptr<Wire>> wiresConnectedTo(const std::shared_ptr<Wire>& wire) const;
 
         // TODO add to "central" sh-ptr management
         QList<std::shared_ptr<Item>> _keep_alive_an_event_loop;
@@ -113,7 +100,6 @@ namespace QSchematic {
          * not be in the list.
          */
         QList<std::shared_ptr<Item>> _items;
-        QList<std::shared_ptr<WireNet>> _nets;
 
         // Note: haven't investigated destructor specification, but it seems
         // this can be skipped, although it would be: explicit, more efficient,
@@ -137,14 +123,12 @@ namespace QSchematic {
         QMap<std::shared_ptr<Item>, QPointF> _initialItemPositions;
         QPointF _initialCursorPosition;
         QUndoStack* _undoStack;
+        std::shared_ptr<WireSystem> _wireSystem;
 
     private slots:
         void itemMoved(const Item& item, const QVector2D& movedBy);
         void itemRotated(const Item& item, const qreal rotation);
         void itemHighlightChanged(const Item& item, bool isHighlighted);
-        void wireNetHighlightChanged(bool highlighted);
-        void wirePointMoved(Wire& wire, WirePoint& point);
-        void wirePointMovedByUser(Wire& rawWire, int point);
         void updateNodeConnections(const Node* node) const;
     };
 

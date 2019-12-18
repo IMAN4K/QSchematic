@@ -652,8 +652,8 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
         bool isConnected = false;
         // Check if the segment is connected to a node
         for (const auto& connector : scene()->connectors()) {
-            if (connector->attachedWire() == this and
-                connector->attachedWirepoint() == pointIndex) {
+            if (scene()->wireSystem()->attachedWire(connector).get() == this and
+                scene()->wireSystem()->attachedWirepoint(connector) == pointIndex) {
                 isConnected = true;
                 break;
             }
@@ -1019,7 +1019,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
         if (not movedBy.isNull() and not _internalMove and scene()) {
             for (const auto& index : junctions()) {
                 const auto& junction = wirePointsAbsolute().at(index);
-                for (const auto& wire : scene()->wires()) {
+                for (const auto& wire : scene()->wireSystem()->wires()) {
                     if (not wire->connectedWires().contains(this)) {
                         continue;
                     }
@@ -1061,8 +1061,8 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                 }
             }
             // Move point onto the connector
-            if (not isSelected and conn->attachedWire() == this) {
-                int index = conn->attachedWirepoint();
+            if (not isSelected and scene()->wireSystem()->attachedWire(conn).get() == this) {
+                int index = scene()->wireSystem()->attachedWirepoint(conn);
                 QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
                 movePointBy(index, moveBy);
             }

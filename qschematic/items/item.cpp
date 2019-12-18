@@ -371,6 +371,11 @@ void Item::posChanged()
     _oldPos = newPos;
 }
 
+void Item::scenePosChanged()
+{
+    emit movedInScene(*this);
+}
+
 void Item::rotChanged()
 {
     const qreal newRot = rotation();

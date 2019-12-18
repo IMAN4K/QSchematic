@@ -20,9 +20,7 @@ Connector::Connector(int type, const QPoint& gridPoint, const QString& text, QGr
     Item(type, parent),
     _snapPolicy(NodeSizerectOutline),
     _forceTextDirection(false),
-    _textDirection(Direction::LeftToRight),
-    _wire(nullptr),
-    _wirePointIndex(-1)
+    _textDirection(Direction::LeftToRight)
 {
     // Label
     _label = QSchematic::mk_sh<Label>();
@@ -39,12 +37,6 @@ Connector::Connector(int type, const QPoint& gridPoint, const QString& text, QGr
 
     // Connections
     connect(this, &Connector::moved, [this]{ calculateTextDirection(); });
-    connect(this, &Connector::moved, this, &Connector::moveWirePoint);
-    Node* node = static_cast<Node*>(parentItem());
-    if (node) {
-        connect(node, &Item::moved, this, &Connector::moveWirePoint);
-        connect(node, &Item::rotated, this, &Connector::moveWirePoint);
-    }
 
     // Misc
     setGridPos(gridPoint);
@@ -105,25 +97,6 @@ void Connector::copyAttributes(Connector& dest) const
     dest._symbolRect = _symbolRect;
     dest._forceTextDirection = _forceTextDirection;
     dest._textDirection = _textDirection;
-}
-
-void Connector::pointInserted(int index)
-{
-    // Do nothing if the connected point is the first
-    if (_wirePointIndex == 0) {
-        return;
-    }
-    // Inserted point comes before the connected point or the last point is connected
-    else if (_wirePointIndex >= index or _wirePointIndex == _wire->pointsAbsolute().count()-2) {
-        _wirePointIndex++;
-    }
-}
-
-void Connector::pointRemoved(int index)
-{
-    if (_wirePointIndex >= index) {
-        _wirePointIndex--;
-    }
 }
 
 void Connector::setSnapPolicy(Connector::SnapPolicy policy)
@@ -239,11 +212,6 @@ QVariant Connector::itemChange(QGraphicsItem::GraphicsItemChange change, const Q
 
     case QGraphicsItem::ItemParentHasChanged:
     {
-        Node* node = static_cast<Node*>(parentItem());
-        if (node) {
-            connect(node, &Item::moved, this, &Connector::moveWirePoint);
-            connect(node, &Item::rotated, this, &Connector::moveWirePoint);
-        }
         calculateTextDirection();
         alignLabel();
         break;
@@ -383,71 +351,4 @@ void Connector::calculateTextDirection()
             }
         }
     }
-}
-
-void Connector::moveWirePoint() const
-{
-    if (not _wire) {
-        return;
-    }
-
-    // Ignore if the wire is not in the same scene
-    if (_wire->scene() != scene()) {
-        return;
-    }
-
-    if (_wirePointIndex < -1 or _wire->wirePointsRelative().count() <= _wirePointIndex) {
-        return;
-    }
-
-    QPointF oldPos = _wire->wirePointsAbsolute().at(_wirePointIndex).toPointF();
-    QVector2D moveBy = QVector2D(scenePos() - oldPos);
-    if (not moveBy.isNull()) {
-        _wire->movePointBy(_wirePointIndex, moveBy);
-    }
-}
-
-void Connector::attachWire(Wire* wire, int index)
-{
-    if (not wire) {
-        return;
-    }
-
-    if (index < -1 or wire->wirePointsRelative().count() < index) {
-        return;
-    }
-
-    // Ignore if there is already one attached
-    if (attachedWire()) {
-        return;
-    }
-
-    _wire = wire;
-    _wirePointIndex = index;
-
-    // Update index when points are inserted/removed
-    connect(wire, &Wire::pointInserted, this, &Connector::pointInserted);
-    connect(wire, &Wire::pointRemoved, this, &Connector::pointRemoved);
-    connect(wire, &QObject::destroyed, this, &Connector::detachWire);
-}
-
-void Connector::detachWire()
-{
-    if (!_wire) {
-        return;
-    }
-
-    disconnect(_wire, nullptr, this, nullptr);
-    _wire = nullptr;
-    _wirePointIndex = -1;
-}
-
-const Wire* Connector::attachedWire() const
-{
-    return _wire;
-}
-
-int Connector::attachedWirepoint() const
-{
-    return _wirePointIndex;
 }

@@ -16,8 +16,6 @@
 #include "items/item.h"
 #include "items/itemmimedata.h"
 #include "items/node.h"
-#include "items/wire.h"
-#include "items/wirenet.h"
 #include "items/label.h"
 #include "utils/itemscontainerutils.h"
 
@@ -33,6 +31,9 @@ Scene::Scene(QObject* parent) :
     // NOTE: still needed, BSP-indexer still crashes on a scene load when
     // the scene is already populated
     setItemIndexMethod(ItemIndexMethod::NoIndex);
+
+    // Wire system
+    _wireSystem = std::make_shared<WireSystem>(this);
 
     // Undo stack
     _undoStack = new QUndoStack;
@@ -72,7 +73,7 @@ gpds::container Scene::to_container() const
 
     // Nets
     gpds::container netsList;
-    for (const auto& net : nets()) {
+    for (const auto& net : _wireSystem->nets()) {
         netsList.add_value("net", net->to_container());
     }
 
@@ -133,42 +134,15 @@ void Scene::from_container(const gpds::container& container)
             net->setScene(this);
             net->from_container( *netContainer );
 
-            addWireNet(net);
+            _wireSystem->addWireNet(net);
         }
     }
 
     // Attach the wires to the nodes
-    for (const auto& net: _nets) {
-        for (const auto& wire: net->wires()) {
-            for (const auto& node: nodes()) {
-                for (const auto& connector: node->connectors()) {
-                    for (const auto& point: wire->wirePointsAbsolute()) {
-                        if (QVector2D(connector->scenePos() - point.toPointF()).length() < 1) {
-                            connector->attachWire(wire.get(), wire->wirePointsAbsolute().indexOf(point));
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    _wireSystem->generateConnections();
 
     // Find junctions
-    for (const auto& wire: wires()) {
-        for (auto& otherWire: wires()) {
-            if (wire == otherWire) {
-                continue;
-            }
-            if (wire->pointIsOnWire(otherWire->wirePointsAbsolute().first().toPointF())) {
-                connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(0, true);
-            }
-            if (wire->pointIsOnWire(otherWire->wirePointsAbsolute().last().toPointF())) {
-                connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(otherWire->wirePointsAbsolute().count()-1, true);
-            }
-        }
-    }
+    _wireSystem->generateJunctions();
 
     // Clear the undo history
     _undoStack->clear();
@@ -266,7 +240,7 @@ void Scene::clear()
     }
 
     // Nets
-    _nets.clear();
+    _wireSystem->clear();
 
     clearIsDirty();
 
@@ -441,151 +415,6 @@ QList<std::shared_ptr<Node>> Scene::nodes() const
     return nodes;
 }
 
-bool Scene::addWire(const std::shared_ptr<Wire>& wire)
-{
-    // Sanity check
-    if (!wire) {
-        return false;
-    }
-
-    // No point of the new wire lies on an existing line segment - create a new wire net
-    auto newNet = std::make_shared<WireNet>();
-    newNet->addWire(wire);
-    addWireNet(newNet);
-
-    // Add wire to scene
-    // Wires createde by mouse interactions are already added to the scene in the Scene::mouseXxxEvent() calls. Prevent
-    // adding an already added item to the scene
-    if (wire->QGraphicsItem::scene() != this) {
-        if (!addItem(wire)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool Scene::removeWire(const std::shared_ptr<Wire> wire)
-{
-    // Remove the wire from the scene
-    removeItem(wire);
-
-    // Disconnect from connectors
-    for (const auto& connector: connectors()) {
-        if (connector->attachedWire() == wire.get()) {
-            connector->detachWire();
-        }
-    }
-
-    // Disconnect from connected wires
-    for (const auto& otherWire: wiresConnectedTo(wire)) {
-        if (otherWire != wire) {
-            if (otherWire->connectedWires().contains(wire.get())) {
-                disconnectWire(otherWire, wire);
-            }
-            else if (wire->connectedWires().contains(otherWire.get())) {
-                disconnectWire(wire, otherWire);
-            }
-            // Update the junction on the other wire
-            for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
-                const auto point = otherWire->wirePointsAbsolute().at(index);
-                if (not point.isJunction()) {
-                    continue;
-                }
-                if (wire->pointIsOnWire(point.toPointF())) {
-                    otherWire->setPointIsJunction(index, false);
-                }
-            }
-        }
-    }
-
-    // Remove the wire from the list
-    QList<std::shared_ptr<WireNet>> netsToDelete;
-    for (auto& net : _nets) {
-        if (net->contains(wire)) {
-            net->removeWire(wire);
-        }
-
-        if (net->wires().count() < 1) {
-            netsToDelete.append(net);
-        }
-    }
-
-    // Delete the net if this was the nets last wire
-    for (auto& net : netsToDelete) {
-        removeWireNet(net);
-    }
-
-    return true;
-}
-
-QList<std::shared_ptr<Wire>> Scene::wires() const
-{
-    QList<std::shared_ptr<Wire>> list;
-
-    for (const auto& wireNet : _nets) {
-        for (const auto& wire : wireNet->wires()) {
-            list.append(wire);
-        }
-    }
-
-    return list;
-}
-
-QList<std::shared_ptr<WireNet>> Scene::nets() const
-{
-    return _nets;
-}
-
-QList<std::shared_ptr<WireNet>> Scene::nets(const std::shared_ptr<WireNet> wireNet) const
-{
-    QList<std::shared_ptr<WireNet>> list;
-
-    for (auto& net : _nets) {
-        if (!net) {
-            continue;
-        }
-
-        if (net->name().isEmpty()) {
-            continue;
-        }
-
-        if (QString::compare(net->name(), wireNet->name(), Qt::CaseInsensitive) == 0) {
-            list.append(net);
-        }
-    }
-
-    return list;
-}
-
-std::shared_ptr<WireNet> Scene::net(const std::shared_ptr<Wire> wire) const
-{
-    for (auto& net : _nets) {
-        for (const auto& w : net->wires()) {
-            if (w == wire) {
-                return net;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-QList<std::shared_ptr<WireNet>> Scene::netsAt(const QPoint& point)
-{
-    QList<std::shared_ptr<WireNet>> list;
-
-    for (auto& net : _nets) {
-        for (const Line& line : net->lineSegments()) {
-            if (line.containsPoint(point) && !list.contains(net)) {
-                list.append(net);
-            }
-        }
-    }
-
-    return list;
-}
-
 void Scene::undo()
 {
     _undoStack->undo();
@@ -622,265 +451,9 @@ void Scene::itemHighlightChanged(const Item& item, bool isHighlighted)
     }
 }
 
-void Scene::wireNetHighlightChanged(bool highlighted)
+std::shared_ptr<WireSystem> Scene::wireSystem() const
 {
-    auto rawPointer = qobject_cast<WireNet*>(sender());
-    if (!rawPointer) {
-        return;
-    }
-    std::shared_ptr<WireNet> wireNet;
-    for (auto& wn : _nets) {
-        if (wn.get() == rawPointer) {
-            wireNet = wn;
-            break;
-        }
-    }
-    if (!wireNet) {
-        return;
-    }
-
-    // Highlight all wire nets that are part of this net
-    for (auto& otherWireNet : nets(wireNet)) {
-        if (otherWireNet == wireNet) {
-            continue;
-        }
-
-        otherWireNet->blockSignals(true);
-        otherWireNet->setHighlighted(highlighted);
-        otherWireNet->blockSignals(false);
-    }
-}
-
-void Scene::wirePointMoved(Wire& rawWire, WirePoint& point)
-{
-    Q_UNUSED(rawWire)
-    Q_UNUSED(point)
-}
-
-void Scene::wirePointMovedByUser(Wire& rawWire, int index)
-{
-    WirePoint point = rawWire.wirePointsRelative().at(index);
-    // Detach from connector
-    for (const auto& node: nodes()) {
-        for (const auto& connector: node->connectors()) {
-            const Wire* attachedWire = connector->attachedWire();
-            if (not attachedWire) {
-                continue;
-            }
-
-            if (attachedWire != &rawWire) {
-                continue;
-            }
-
-            if (connector->attachedWirepoint() == index) {
-                if (connector->scenePos().toPoint() != rawWire.pointsAbsolute().at(index).toPoint()) {
-                    connector->detachWire();
-                }
-            }
-        }
-    }
-
-    // Attach to connector
-    for (const auto& node: nodes()) {
-        for (const auto& connector: node->connectors()) {
-            if (connector->scenePos().toPoint() == (rawWire.pos() + point.toPointF()).toPoint()) {
-                connector->attachWire(&rawWire, rawWire.wirePointsRelative().indexOf(point));
-            }
-        }
-    }
-
-    // Detach wires
-    if (index == 0 or index == rawWire.pointsAbsolute().count()-1){
-        if (point.isJunction()) {
-            for (const auto& wire: wires()) {
-                // Skip current wire
-                if (wire.get() == &rawWire) {
-                    continue;
-                }
-                // If is connected
-                if (wire->connectedWires().contains(&rawWire)) {
-                    bool shouldDisconnect = true;
-                    // Keep the wires connected if there is another junction
-                    for (const auto& jIndex : rawWire.junctions()) {
-                        const auto& junction = rawWire.wirePointsAbsolute().at(jIndex);
-                        // Ignore the point that moved
-                        if (jIndex == index) {
-                            continue;
-                        }
-                        // If the point is on the line stay connected
-                        if (wire->pointIsOnWire(junction.toPointF())) {
-                            shouldDisconnect = false;
-                            break;
-                        }
-                    }
-                    if (shouldDisconnect) {
-                        auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
-                        disconnectWire(wire, rawWirePtr);
-                    }
-                    rawWire.setPointIsJunction(index, false);
-                }
-            }
-        }
-    }
-
-    // Attach point to wire if needed
-    if (index == 0 or index == rawWire.wirePointsAbsolute().count()-1) {
-        for (const auto& wire: wires()) {
-            // Skip current wire
-            if (wire.get() == &rawWire) {
-                continue;
-            }
-            if (wire->pointIsOnWire(rawWire.wirePointsAbsolute().at(index).toPointF())) {
-                if (not rawWire.connectedWires().contains(wire.get())) {
-                    rawWire.setPointIsJunction(index, true);
-                    auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
-                    connectWire(wire, rawWirePtr);
-                }
-            }
-        }
-    }
-}
-
-/**
- * Disconnects the a wire from another and takes care of updating the wirenets.
- * \param wire The wire that the other is attached to
- * \param otherWire The wire that is being disconnected
- */
-void Scene::disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire)
-{
-    wire->disconnectWire(otherWire.get());
-    auto net = otherWire->net();
-    // Create a list of wires that will stay in the old net
-    QVector<std::shared_ptr<Wire>> oldWires = wiresConnectedTo(wire);
-    // If there are wires that are not in the list create a new net
-    if (net->wires().count() != oldWires.count()) {
-        // Create new net and add the wire
-        auto newNet = std::make_shared<WireNet>();
-        addWireNet(newNet);
-        for (auto wireToMove: net->wires()) {
-            if (oldWires.contains(wireToMove)) {
-                continue;
-            }
-            newNet->addWire(wireToMove);
-            net->removeWire(wireToMove);
-        }
-    }
-}
-
-/**
- * Generates a list of all the wires connected to a certain wire including the
- * wire itself.
- */
-QVector<std::shared_ptr<Wire>> Scene::wiresConnectedTo(const std::shared_ptr<Wire>& wire) const
-{
-    QVector<std::shared_ptr<Wire>> connectedWires;
-
-    // Add the wire itself to the list
-    connectedWires.push_back(wire);
-
-    QVector<std::shared_ptr<Wire>> newList;
-    do {
-        newList.clear();
-        // Go through all the wires in the net
-        for (const auto& otherWire: wire->net()->wires()) {
-            // Ignore if the wire is already in the list
-            if (connectedWires.contains(otherWire)) {
-                continue;
-            }
-
-            // If they are connected to one of the wire in the list add them to the new list
-            for (const auto& wire2 : connectedWires) {
-                if (wire2->connectedWires().contains(otherWire.get())) {
-                    newList << otherWire;
-                    break;
-                }
-                if (otherWire->connectedWires().contains(wire2.get())) {
-                    newList << otherWire;
-                    break;
-                }
-            }
-        }
-
-        connectedWires << newList;
-    } while (not newList.isEmpty());
-
-    return connectedWires;
-}
-
-/**
- * Connect a wire to another wire while taking care of merging the nets.
- * @param wire The wire to connect to
- * @param rawWire The wire to connect
- */
-void Scene::connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire)
-{
-    if (not wire->connectWire(rawWire.get())) {
-        return;
-    }
-    std::shared_ptr<WireNet> net = netFromWire(wire);
-    std::shared_ptr<WireNet> otherNet = netFromWire(rawWire);
-    if (mergeNets(net, otherNet)) {
-        removeWireNet(otherNet);
-    }
-}
-
-/**
- * Recusivelly move a wire and all the wires attached to it to a wirenet.
- */
-void Scene::moveWireToNet(std::shared_ptr<Wire>& rawWire, std::shared_ptr<WireNet>& newNet) const
-{
-    std::shared_ptr<WireNet> net = netFromWire(rawWire);
-    newNet->addWire(rawWire);
-    net->removeWire(rawWire);
-    for (const auto wire: rawWire->connectedWires()) {
-        auto wirePtr = std::static_pointer_cast<Wire>(wire->sharedPtr());
-        moveWireToNet(wirePtr, newNet);
-    }
-}
-
-/**
- * Merges two wirenets into one
- * \param net The net into which the other one will be merged
- * \param otherNet The net to merge into the other one
- * \return Whether the two nets where merged successfully or not
- */
-bool Scene::mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet)
-{
-    // Ignore if it's the same net
-    if (net == otherNet) {
-        return false;
-    }
-    for (auto& wire: otherNet->wires()) {
-        net->addWire(wire);
-        otherNet->removeWire(wire);
-    }
-    return true;
-}
-
-std::shared_ptr<WireNet> Scene::netFromWire(const std::shared_ptr<Wire>& wire) const
-{
-    for (auto& otherNet : _nets) {
-        if (otherNet->contains(wire)) {
-           return otherNet;
-        }
-    }
-    return nullptr;
-}
-
-void Scene::addWireNet(const std::shared_ptr<WireNet> wireNet)
-{
-    // Sanity check
-    if (!wireNet) {
-        return;
-    }
-
-    // Setup
-    connect(wireNet.get(), &WireNet::pointMoved, this, &Scene::wirePointMoved);
-    connect(wireNet.get(), &WireNet::pointMovedByUser, this, &Scene::wirePointMovedByUser);
-    connect(wireNet.get(), &WireNet::highlightChanged, this, &Scene::wireNetHighlightChanged);
-
-    // Keep track of stuff
-    _nets.append(wireNet);
+    return _wireSystem;
 }
 
 void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
@@ -962,7 +535,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
             for (const auto& node: nodes()) {
                 for (const auto& connector: node->connectors()) {
                     if (QVector2D(connector->scenePos() - snappedPos).length() < 1) {
-                        connector->attachWire(_newWire.get(), _newWire->pointsAbsolute().indexOf(snappedPos));
+                        _wireSystem->attachWireToConnector(_newWire, _newWire->pointsAbsolute().indexOf(snappedPos), connector);
                         break;
                     }
                 }
@@ -970,13 +543,13 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
             // Attach point to wire if needed
             if (_newWire->pointsAbsolute().count() == 1) {
-                for (const auto& wire: wires()) {
+                for (const auto& wire: _wireSystem->wires()) {
                     // Skip current wire
                     if (wire == _newWire) {
                         continue;
                     }
                     if (wire->pointIsOnWire(_newWire->pointsAbsolute().first())) {
-                        connectWire(wire, _newWire);
+                        _wireSystem->connectWire(wire, _newWire);
                         _newWire->setPointIsJunction(0, true);
                         break;
                     }
@@ -1001,7 +574,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     {
         QGraphicsScene::mouseReleaseEvent(event);
 
-        for (const auto& net : nets()) {
+        for (const auto& net : _wireSystem->nets()) {
             net->updateLabelPos(true);
         }
         // Reset the position for every selected item and
@@ -1047,7 +620,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
                 }
             }
 
-            for (auto& item : wires()) {
+            for (auto& item : _wireSystem->wires()) {
                 Wire* wire = dynamic_cast<Wire*>(item.get());
                 if (wire) {
                     wire->updatePosition();
@@ -1084,11 +657,11 @@ void Scene::updateNodeConnections(const Node* node) const
     // Check if a connector lays on a wirepoint
     for (auto& connector : node->connectors()) {
         // If the connector already has a wire attached, skip
-        if (connector->attachedWire() != nullptr) {
+        if (_wireSystem->attachedWire(connector) != nullptr) {
             continue;
         }
         // Find if there is a point to connect to
-        for (const auto& wire : wires()) {
+        for (const auto& wire : _wireSystem->wires()) {
             int index = -1;
             if (wire->wirePointsAbsolute().first().toPoint() == connector->scenePos().toPoint()) {
                 index = 0;
@@ -1106,15 +679,15 @@ void Scene::updateNodeConnections(const Node* node) const
                     if (otherConnector == connector) {
                         continue;
                     }
-                    if (otherConnector->attachedWire() == wire.get() and
-                        otherConnector->attachedWirepoint() == index) {
+                    if (_wireSystem->attachedWire(connector) == wire and
+                        _wireSystem->attachedWirepoint(otherConnector) == index) {
                         alreadyConnected = true;
                         break;
                     }
                 }
                 // If it's not already connected, connect it
                 if (not alreadyConnected) {
-                    connector->attachWire(wire.get(), index);
+                    _wireSystem->attachWireToConnector(wire, index, connector);
                 }
             }
         }
@@ -1162,7 +735,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
                     item->setPos(item->pos() + moveBy);
                 }
                 // Simplify all the wires
-                for (auto& wire : wires()) {
+                for (auto& wire : _wireSystem->wires()) {
                     wire->simplify();
                 }
             }
@@ -1269,13 +842,13 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
             }
 
             // Attach point to wire if needed
-            for (const auto& wire: wires()) {
+            for (const auto& wire: _wireSystem->wires()) {
                 // Skip current wire
                 if (wire == _newWire) {
                     continue;
                 }
                 if (wire->pointIsOnWire(_newWire->pointsAbsolute().last())) {
-                    connectWire(wire, _newWire);
+                    _wireSystem->connectWire(wire, _newWire);
                     _newWire->setPointIsJunction(_newWire->pointsAbsolute().count()-1, true);
                     wireIsFloating = false;
                 }
@@ -1475,9 +1048,4 @@ QList<std::shared_ptr<Connector>> Scene::connectors() const
     }
 
     return list;
-}
-
-void Scene::removeWireNet(std::shared_ptr<WireNet> net)
-{
-    _nets.removeAll(net);
 }
