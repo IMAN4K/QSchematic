@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QXmlStreamWriter>
 #include <QUndoStack>
 #include <QMimeData>
@@ -41,8 +42,22 @@ Scene::Scene(QObject* parent) :
 
     // Stuff
     connect(this, &QGraphicsScene::sceneRectChanged, [this]{
+//        qDebug() << itemsBoundingRect();
+//        qDebug() << sceneRect();
         renderCachedBackground();
     });
+
+    connect(this, &QGraphicsScene::changed, [this]{
+//        QRectF r1 = itemsBoundingRect();
+//        QRectF r2 = views().first()->mapToScene(views().first()->viewport()->geometry()).boundingRect().adjusted(0, 0, -2, -2);
+//        QRectF r2old = r2;
+//        r2.moveTo(r1.center().x() - r2.width() / 2, r1.center().y() - r2.height() / 2);
+//        QRectF r3;
+//        qDebug() << "R1" << r1 << "R2" << r2 << "R3" << r3;
+//        setSceneRect(r2.united(r1).united(r2old));
+    });
+
+    addEllipse(QRectF(-5, -5, 10, 10));
 
     // Prepare the background
     renderCachedBackground();
@@ -100,7 +115,7 @@ void Scene::from_container(const gpds::container& container)
             rect.setWidth(rectContainer->get_value<int>("width").value_or(0));
             rect.setHeight(rectContainer->get_value<int>("height").value_or(0));
 
-            setSceneRect( rect );
+//            setSceneRect( rect );
         }
     }
 
@@ -1149,6 +1164,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 
         // Move, resize or rotate if supposed to
         if (event->buttons() & Qt::LeftButton) {
+//            qDebug() << newMousePos;
             // Move all selected items
             if (_movingNodes) {
                 QVector<std::shared_ptr<Item>> wiresToMove;
@@ -1388,6 +1404,13 @@ void Scene::drawBackground(QPainter* painter, const QRectF& rect)
     const QPointF& pixmapTopleft = rect.topLeft() - sceneRect().topLeft();
 
     painter->drawPixmap(rect, _backgroundPixmap, QRectF(pixmapTopleft.x(), pixmapTopleft.y(), rect.width(), rect.height()));
+    QRectF r1 = itemsBoundingRect();
+    QRectF r2 = views().first()->mapToScene(views().first()->viewport()->geometry()).boundingRect().adjusted(0, 0, -2, -2);
+    QRectF r2old = r2;
+    r2.moveTo(r1.center().x() - r2.width() / 2, r1.center().y() - r2.height() / 2);
+    QRectF r3;
+    painter->drawRect(r1);
+    painter->drawRect(r2);
 }
 
 QVector2D Scene::itemsMoveSnap(const std::shared_ptr<Item>& items, const QVector2D& moveBy) const

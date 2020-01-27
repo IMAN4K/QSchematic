@@ -118,6 +118,9 @@ void View::mouseMoveEvent(QMouseEvent *event)
         break;
 
     case PanMode:
+        _offset -= event->pos() - _panStart;
+        qDebug() << _offset.x();
+        updateRect();
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - (event->x() - _panStart.x()));
         verticalScrollBar()->setValue(verticalScrollBar()->value() - (event->y() - _panStart.y()));
         _panStart = event->pos();
@@ -154,6 +157,7 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 void View::setScene(Scene* scene)
 {
     if (scene) {
+        scene->setSceneRect(viewport()->geometry());
         connect(scene, &Scene::modeChanged, [this](int newMode){
             switch (newMode) {
             case Scene::NormalMode:
@@ -168,11 +172,34 @@ void View::setScene(Scene* scene)
                 break;
             }
         });
+
+        connect(scene, &Scene::sceneRectChanged, [=] {
+            updateRect();
+        });
     }
 
     QGraphicsView::setScene(scene);
 
     _scene = scene;
+    updateRect();
+    centerOn(sceneRect().center());
+}
+
+void View::updateRect()
+{
+    if (not _scene) {
+        return;
+    }
+
+    QRectF itemsRect = _scene->itemsBoundingRect();
+    QRectF viewRect = mapToScene(viewport()->geometry()).boundingRect().adjusted(0, 0, -2, -2);
+//    QRectF viewRect = viewport()->geometry().adjusted(0, 0, -2, -2);
+    QRectF currentRect = viewRect;
+    currentRect.moveCenter(viewRect.center() + _offset);
+    viewRect.moveTo(itemsRect.center().x() - viewRect.width() / 2, itemsRect.center().y() - viewRect.height() / 2);
+    QRectF r3;
+    qDebug() << "R1" << itemsRect << "R2" << viewRect << "R3" << r3;
+    setSceneRect(viewRect.united(itemsRect).united(currentRect));
 }
 
 void View::setSettings(const Settings& settings)
@@ -194,6 +221,7 @@ void View::updateScale()
 {
     // Apply the new scale
     setTransform(QTransform::fromScale(_scaleFactor, _scaleFactor));
+    updateRect();
 
     emit zoomChanged(_scaleFactor);
 }

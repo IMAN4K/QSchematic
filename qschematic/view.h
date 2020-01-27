@@ -47,5 +47,7 @@ namespace QSchematic {
         qreal _scaleFactor;
         Mode _mode;
         QPoint _panStart;
+        void updateRect();
+        QPointF _offset;
     };
 }

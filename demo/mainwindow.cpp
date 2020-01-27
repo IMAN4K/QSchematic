@@ -346,7 +346,7 @@ void MainWindow::print()
 void MainWindow::demo()
 {
     _scene->clear();
-    _scene->setSceneRect(-500, -500, 3000, 3000);
+//    _scene->setSceneRect(-500, -500, 3000, 3000);
 
     auto o1 = QSchematic::mk_sh<Operation>();
     o1->addConnector(QSchematic::mk_sh<OperationConnector>(QPoint(0, 2), QStringLiteral("in")));
