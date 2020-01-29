@@ -7,6 +7,7 @@
 #include "view.h"
 #include "scene.h"
 #include "settings.h"
+#include <QApplication>
 
 const qreal ZOOM_FACTOR_MIN   = 0.25;
 const qreal ZOOM_FACTOR_MAX   = 10.00;
@@ -118,11 +119,35 @@ void View::mouseMoveEvent(QMouseEvent *event)
         break;
 
     case PanMode:
-        _offset -= event->pos() - _panStart;
-        qDebug() << _offset.x();
+        qDebug() << "====";
+        qDebug() << event->pos();
+        QPointF currentOffset = mapToScene(viewport()->geometry().center()) - _scene->itemsBoundingRect().center();
+        QPointF offset(_panStart - event->pos());
+        _offset = currentOffset + offset;
+//        qDebug() << "current" << currentOffset.x() << "offset" << offset.x() << "new" << _offset.x();
+//        qDebug() << _offset.x();
+        QRectF oldSceneRect = sceneRect();
+        qreal horizontalPos = horizontalScrollBar()->value() - (event->x() - _panStart.x());
+//        qDebug() << horizontalScrollBar()->value();
+//        qDebug() << horizontalPos;
+        qreal verticalPos = verticalScrollBar()->value() - (event->y() - _panStart.y());
         updateRect();
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - (event->x() - _panStart.x()));
-        verticalScrollBar()->setValue(verticalScrollBar()->value() - (event->y() - _panStart.y()));
+//        qDebug() << currentOffset;
+        qDebug() << mapToScene(offset.toPoint());
+//        qDebug() << _offset;
+        qDebug() << sceneRect().width() - oldSceneRect.width();
+//        qDebug() << sceneRect().width() - mapToScene(viewport()->geometry()).boundingRect().width();
+
+//        qDebug() << offset;
+//        qDebug() << mapToScene(viewport()->geometry().center());
+//        qDebug() << mapToScene(viewport()->geometry().center()) + offset;
+//        centerOn(mapToScene(viewport()->geometry().center() + offset.toPoint()));
+        qDebug() << horizontalScrollBar()->value();
+        horizontalScrollBar()->setValue(horizontalPos);
+        qDebug() << horizontalScrollBar()->value();
+        verticalScrollBar()->setValue(verticalPos);
+//        qDebug() << mapToScene(viewport()->geometry().center());
+
         _panStart = event->pos();
         event->accept();
         return;
@@ -192,13 +217,12 @@ void View::updateRect()
     }
 
     QRectF itemsRect = _scene->itemsBoundingRect();
-    QRectF viewRect = mapToScene(viewport()->geometry()).boundingRect().adjusted(0, 0, -2, -2);
+    QRectF viewRect = mapToScene(viewport()->geometry()).boundingRect();//.adjusted(0, 0, -2, -2);
 //    QRectF viewRect = viewport()->geometry().adjusted(0, 0, -2, -2);
     QRectF currentRect = viewRect;
-    currentRect.moveCenter(viewRect.center() + _offset);
+    currentRect.moveCenter(itemsRect.center() + _offset);
     viewRect.moveTo(itemsRect.center().x() - viewRect.width() / 2, itemsRect.center().y() - viewRect.height() / 2);
-    QRectF r3;
-    qDebug() << "R1" << itemsRect << "R2" << viewRect << "R3" << r3;
+//    qDebug() << "Items" << itemsRect << "view size" << viewRect << "viewport" << currentRect;
     setSceneRect(viewRect.united(itemsRect).united(currentRect));
 }
 

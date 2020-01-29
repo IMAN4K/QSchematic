@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     connect(_scene, &QSchematic::Scene::itemHighlighted, [](const auto& item){
-        qInfo() << "Item highlighted: " << item.get();
+//        qInfo() << "Item highlighted: " << item.get();
     });
 
     // View
