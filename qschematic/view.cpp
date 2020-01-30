@@ -180,7 +180,6 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 void View::setScene(Scene* scene)
 {
     if (scene) {
-        setSceneRect(viewport()->geometry());
         connect(scene, &Scene::modeChanged, [this](int newMode){
             switch (newMode) {
             case Scene::NormalMode:
@@ -266,4 +265,10 @@ void View::fitInView()
         _scaleFactor = std::min(_scaleFactor, currentScaleFactor);
     }
     updateScale();
+
+    // Center on the items
+    QRectF view = mapToScene(viewport()->geometry()).boundingRect();
+    view.moveCenter(rect.center());
+    setSceneRect(sceneRect().united(view));
+    centerOn(rect.center());
 }
