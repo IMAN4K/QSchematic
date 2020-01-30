@@ -41,12 +41,12 @@ Scene::Scene(QObject* parent) :
     });
 
     // Stuff
-    connect(this, &QGraphicsScene::sceneRectChanged, [this]{
-        renderCachedBackground();
-    });
+//    connect(this, &QGraphicsScene::sceneRectChanged, [this]{
+//        renderCachedBackground();
+//    });
 
     // Prepare the background
-    renderCachedBackground();
+//    renderCachedBackground();
 }
 
 gpds::container Scene::to_container() const
@@ -185,7 +185,7 @@ void Scene::setSettings(const Settings& settings)
     _settings = settings;
 
     // Redraw
-    renderCachedBackground();
+//    renderCachedBackground();
     update();
 }
 
@@ -1417,9 +1417,36 @@ void Scene::dropEvent(QGraphicsSceneDragDropEvent* event)
 
 void Scene::drawBackground(QPainter* painter, const QRectF& rect)
 {
-    const QPointF& pixmapTopleft = rect.topLeft() - sceneRect().topLeft();
+    if (not _settings.showGrid) {
+        return;
+    }
 
-    painter->drawPixmap(rect, _backgroundPixmap, QRectF(pixmapTopleft.x(), pixmapTopleft.y(), rect.width(), rect.height()));
+    // Find the offset to the first point
+    QPointF snapped = _settings.snapToGrid(rect.topLeft());
+    QPointF offset = snapped - rect.topLeft();
+
+    // Draw the actual grid points
+
+    // Grid pen
+    QPen gridPen;
+    gridPen.setStyle(Qt::SolidLine);
+    gridPen.setColor(Qt::gray);
+    gridPen.setCapStyle(Qt::RoundCap);
+    gridPen.setWidth(_settings.gridPointSize);
+
+    // Grid brush
+    QBrush gridBrush;
+    gridBrush.setStyle(Qt::NoBrush);
+
+    painter->setPen(gridPen);
+    painter->setBrush(gridBrush);
+    painter->setRenderHint(QPainter::Antialiasing, _settings.antialiasing);
+
+    for (qreal x = rect.left() + offset.x(); x < rect.right(); x += _settings.gridSize) {
+        for (qreal y = rect.top() + offset.y(); y < rect.bottom(); y += _settings.gridSize) {
+            painter->drawPoint(x, y);
+        }
+    }
 }
 
 QVector2D Scene::itemsMoveSnap(const std::shared_ptr<Item>& items, const QVector2D& moveBy) const
