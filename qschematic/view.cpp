@@ -7,6 +7,7 @@
 #include "view.h"
 #include "scene.h"
 #include "settings.h"
+#include <QtMath>
 
 const qreal ZOOM_FACTOR_MIN   = 0.25;
 const qreal ZOOM_FACTOR_MAX   = 10.00;
@@ -128,8 +129,23 @@ void View::mouseMoveEvent(QMouseEvent *event)
         break;
 
     case PanMode:
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - (event->x() - _panStart.x()));
-        verticalScrollBar()->setValue(verticalScrollBar()->value() - (event->y() - _panStart.y()));
+        qreal horizontalPos = horizontalScrollBar()->value() - (event->x() - _panStart.x());
+        qreal verticalPos = verticalScrollBar()->value() - (event->y() - _panStart.y());
+        if (horizontalScrollBar()->maximum() < qCeil(horizontalPos)) {
+            horizontalScrollBar()->setMaximum(qCeil(horizontalPos));
+        }
+        else if (horizontalScrollBar()->minimum() > qFloor(horizontalPos)) {
+            horizontalScrollBar()->setMinimum(qFloor(horizontalPos));
+        }
+        if (verticalScrollBar()->maximum() < qCeil(verticalPos)) {
+            verticalScrollBar()->setMaximum(qCeil(verticalPos));
+        }
+        else if (verticalScrollBar()->minimum() > qFloor(verticalPos)) {
+            verticalScrollBar()->setMinimum(qFloor(verticalPos));
+        }
+        horizontalScrollBar()->setValue(horizontalPos);
+        verticalScrollBar()->setValue(verticalPos);
+
         _panStart = event->pos();
         event->accept();
         return;
@@ -164,6 +180,7 @@ void View::mouseReleaseEvent(QMouseEvent *event)
 void View::setScene(Scene* scene)
 {
     if (scene) {
+        setSceneRect(viewport()->geometry());
         connect(scene, &Scene::modeChanged, [this](int newMode){
             switch (newMode) {
             case Scene::NormalMode:
