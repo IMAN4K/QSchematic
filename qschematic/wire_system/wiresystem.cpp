@@ -426,8 +426,6 @@ void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, int in
         return;
     }
 
-    _connections.insert(connector, { wire, index });
-
     // Update index when points are inserted/removed
     if (connectorsAttachedToWire(wire).isEmpty()) {
         connect(wire.get(), &Wire::pointInserted, this, [=](int index) { pointInserted(wire, index); });
@@ -435,8 +433,10 @@ void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, int in
         connect(wire.get(), &QObject::destroyed, this, [=] { detachWireFromAll(wire); });
     }
 
+    _connections.insert(connector, { wire, index });
+
     // Move the wire when the connector or its parent node moves
-    connect(connector.get(), &Connector::movedInScene, this, [=] { connectorMoved(connector); });
+    connect(connector.get(), &Connector::movedInScene, this, [=, connector = connector.get()] { connectorMoved(connector->sharedPtr<Connector>()); });
 }
 
 void WireSystem::pointInserted(const std::shared_ptr<Wire>& wire, int index)
@@ -449,7 +449,7 @@ void WireSystem::pointInserted(const std::shared_ptr<Wire>& wire, int index)
         }
         // Do nothing if the connected point is the first
         if (wirePoint.second == 0) {
-            return;
+            continue;
         }
         // Inserted point comes before the connected point or the last point is connected
         else if (wirePoint.second >= index or wirePoint.second == wire->pointsAbsolute().count()-2) {

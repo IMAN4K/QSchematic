@@ -27,6 +27,10 @@ Item::Item(int type, QGraphicsItem* parent) :
     connect(this, &Item::xChanged, this, &Item::posChanged);
     connect(this, &Item::yChanged, this, &Item::posChanged);
     connect(this, &Item::rotationChanged, this, &Item::rotChanged);
+    Item* parentItem = static_cast<Item*>(parent);
+    if (parent) {
+        connect(parentItem, &Item::moved, this, &Item::scenePosChanged);
+    }
 }
 
 Item::~Item()
@@ -334,6 +338,19 @@ QVariant Item::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
         }
         return newPos;
     }
+    case QGraphicsItem::ItemParentChange:
+        if (parentObject()) {
+            disconnect(parentObject(), nullptr, this, nullptr);
+        }
+        return value;
+    case QGraphicsItem::ItemParentHasChanged:
+    {
+        Item* parent = static_cast<Item*>(parentItem());
+        if (parent) {
+            connect(parent, &Item::moved, this, &Item::scenePosChanged);
+        }
+        return value;
+    }
 
     default:
         return QGraphicsItem::itemChange(change, value);
@@ -342,6 +359,7 @@ QVariant Item::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
 
 void Item::posChanged()
 {
+    scenePosChanged();
     const QPointF& newPos = pos();
     QVector2D movedBy(newPos - _oldPos);
     if (!movedBy.isNull()) {
