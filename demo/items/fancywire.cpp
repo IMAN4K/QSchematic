@@ -1,14 +1,11 @@
 #include <QPen>
-#include <QBrush>
 #include <QPainter>
 #include <QVector2D>
 #include <QInputDialog>
 #include "../qschematic/commands/commandwirenetrename.h"
 #include "../qschematic/items/wirepoint.h"
 #include "../qschematic/items/connector.h"
-#include "../qschematic/items/wirenet.h"
 #include "../qschematic/scene.h"
-#include "../qschematic/settings.h"
 #include "itemtypes.h"
 #include "fancywire.h"
 
@@ -43,7 +40,7 @@ void FancyWire::from_container(const gpds::container& container)
 
 std::shared_ptr<QSchematic::Item> FancyWire::deepCopy() const
 {
-    auto clone = QSchematic::mk_sh<FancyWire>(parentItem());
+    auto clone = std::make_shared<FancyWire>(parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;

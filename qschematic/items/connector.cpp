@@ -2,11 +2,13 @@
 #include <QPainter>
 #include <QTransform>
 #include <QVector2D>
+#include <QGraphicsSceneHoverEvent>
 #include "connector.h"
 #include "node.h"
 #include "label.h"
 #include "../utils.h"
 #include "wire.h"
+#include "scene.h"
 
 const qreal SIZE               = 1;
 const QColor COLOR_BODY_FILL   = QColor(Qt::green);
@@ -23,7 +25,7 @@ Connector::Connector(int type, const QPoint& gridPoint, const QString& text, QGr
     _textDirection(Direction::LeftToRight)
 {
     // Label
-    _label = QSchematic::mk_sh<Label>();
+    _label = std::make_shared<Label>();
     _label->setParentItem(this);
     _label->setText(text);
 
@@ -75,7 +77,7 @@ void Connector::from_container(const gpds::container& container)
 
 std::shared_ptr<Item> Connector::deepCopy() const
 {
-    auto clone = mk_sh<Connector>(type(), gridPos(), text(), parentItem());
+    auto clone = std::make_shared<Connector>(type(), gridPos(), text(), parentItem());
     copyAttributes(*(clone.get()));
 
     return clone;
@@ -89,7 +91,7 @@ void Connector::copyAttributes(Connector& dest) const
     Item::copyAttributes(dest);
 
     // Label
-    dest._label = adopt_origin_instance<QSchematic::Label>(_label->deepCopy());
+    dest._label = std::dynamic_pointer_cast<QSchematic::Label>(_label->deepCopy());
     dest._label->setParentItem(&dest);
 
     // Attributes

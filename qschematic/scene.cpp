@@ -1,10 +1,8 @@
 #include <algorithm>
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
-#include <QMessageBox>
 #include <QXmlStreamWriter>
 #include <QUndoStack>
-#include <QPixmap>
 #include <QMimeData>
 #include <QtMath>
 #include <QTimer>
@@ -12,6 +10,7 @@
 #include "scene.h"
 #include "commands/commanditemmove.h"
 #include "commands/commanditemadd.h"
+#include "commands/commanditemremove.h"
 #include "items/itemfactory.h"
 #include "items/item.h"
 #include "items/itemmimedata.h"
@@ -26,7 +25,8 @@ Scene::Scene(QObject* parent) :
     _mode(NormalMode),
     _newWireSegment(false),
     _invertWirePosture(true),
-    _movingNodes(false)
+    _movingNodes(false),
+    _highlightedItem(nullptr)
 {
     // NOTE: still needed, BSP-indexer still crashes on a scene load when
     // the scene is already populated
@@ -242,9 +242,14 @@ void Scene::clear()
     // Nets
     _wireSystem->clear();
 
-    clearIsDirty();
+    // Now that all the top-level items are safeguarded we can call the underlying scene's clear()
+#warning "Address this issue..."
+    //QGraphicsScene::clear();
+    const int& itemsCount = QGraphicsScene::items().count();
+    if (itemsCount > 0)
+        qWarning("Scene::clear(): There are still %d items left in the scene. This shouldn't happen.", itemsCount);
 
-    Q_ASSERT(QGraphicsScene::items().isEmpty());
+    clearIsDirty();
 
     // Update
     update(); // Note, should not be needed, and not recommended according to input, but avoid adding yet a permutation to the investigation
@@ -288,10 +293,6 @@ bool Scene::removeItem(const std::shared_ptr<Item> item)
     }
 
     auto itemBoundsToUpdate = item->mapRectToScene(item->boundingRect());
-
-    // Won't remove them selves, if items are kept alive for other reasons
-    disconnect(item.get(), &Item::moved, this, &Scene::itemMoved);
-    disconnect(item.get(), &Item::rotated, this, &Scene::itemRotated);
 
     // NOTE: Sometimes ghosts remain (not drawn away) when they're active in some way at remove time, found below from looking at Qt-source code...
     item->clearFocus();
@@ -430,27 +431,6 @@ QUndoStack* Scene::undoStack() const
     return _undoStack;
 }
 
-void Scene::itemMoved(const Item& item, const QVector2D& movedBy)
-{
-    Q_UNUSED(movedBy)
-    Q_UNUSED(item)
-}
-
-void Scene::itemRotated(const Item& item, const qreal rotation)
-{
-    Q_UNUSED(item)
-    Q_UNUSED(rotation)
-}
-
-void Scene::itemHighlightChanged(const Item& item, bool isHighlighted)
-{
-    // Retrieve the corresponding smart pointer
-    if (auto sharedPointer = item.sharedPtr()) {
-        // Let the world know
-        emit itemHighlightChanged(sharedPointer, isHighlighted);
-    }
-}
-
 std::shared_ptr<WireSystem> Scene::wireSystem() const
 {
     return _wireSystem;
@@ -519,9 +499,9 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
             // Start a new wire if there isn't already one. Else continue the current one.
             if (!_newWire) {
                 if (_wireFactory) {
-                    _newWire = adopt_origin_instance(_wireFactory());
+                    _newWire = _wireFactory();
                 } else {
-                    _newWire = mk_sh<Wire>();
+                    _newWire = std::make_shared<Wire>();
                 }
                 _undoStack->push(new CommandItemAdd(this, _newWire));
                 _newWire->setPos(_settings.snapToGrid(event->scenePos()));
@@ -532,28 +512,34 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
             _newWireSegment = true;
 
             // Attach point to connector if needed
+            bool wireAttached = false;
             for (const auto& node: nodes()) {
                 for (const auto& connector: node->connectors()) {
                     if (QVector2D(connector->scenePos() - snappedPos).length() < 1) {
                         _wireSystem->attachWireToConnector(_newWire, _newWire->pointsAbsolute().indexOf(snappedPos), connector);
+                        wireAttached = true;
                         break;
                     }
                 }
             }
 
             // Attach point to wire if needed
-            if (_newWire->pointsAbsolute().count() == 1) {
-                for (const auto& wire: _wireSystem->wires()) {
-                    // Skip current wire
-                    if (wire == _newWire) {
-                        continue;
-                    }
-                    if (wire->pointIsOnWire(_newWire->pointsAbsolute().first())) {
-                        _wireSystem->connectWire(wire, _newWire);
-                        _newWire->setPointIsJunction(0, true);
-                        break;
-                    }
+            for (const auto& wire: _wireSystem->wires()) {
+                // Skip current wire
+                if (wire == _newWire) {
+                    continue;
                 }
+                if (wire->pointIsOnWire(_newWire->pointsAbsolute().last())) {
+                    _wireSystem->connectWire(wire, _newWire);
+                    _newWire->setPointIsJunction(_newWire->pointsAbsolute().count() - 1, true);
+                    wireAttached = true;
+                    break;
+                }
+            }
+
+            // Check if both ends of the wire are connected to something
+            if (wireAttached and _newWire->pointsAbsolute().count() > 1) {
+                finishCurrentWire();
             }
 
         }
@@ -746,6 +732,37 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             QGraphicsScene::mouseMoveEvent(event);
         }
 
+        // Highlight the item under the cursor
+        Item* item = dynamic_cast<Item*>(itemAt(newMousePos, QTransform()));
+        if (item) {
+            // Skip if the item is already highlighted
+            if (item == _highlightedItem) {
+                break;
+            }
+            // Disable the highlighting on the previous item
+            if (_highlightedItem) {
+                _highlightedItem->setHighlighted(false);
+                itemHoverLeave(_highlightedItem->shared_from_this());
+                _highlightedItem->update();
+                emit _highlightedItem->highlightChanged(*_highlightedItem, false);
+                _highlightedItem = nullptr;
+            }
+            // Highlight the item
+            item->setHighlighted(true);
+            itemHoverEnter(item->shared_from_this());
+            item->update();
+            emit item->highlightChanged(*item, true);
+            _highlightedItem = item;
+        }
+        // No item selected
+        else if (_highlightedItem) {
+            _highlightedItem->setHighlighted(false);
+            itemHoverLeave(_highlightedItem->shared_from_this());
+            _highlightedItem->update();
+            emit _highlightedItem->highlightChanged(*_highlightedItem, false);
+            _highlightedItem = nullptr;
+        }
+
         break;
     }
 
@@ -828,18 +845,9 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
 
         // Only do something if there's a wire
         if (_newWire && _newWire->pointsRelative().count() > 1) {
-            bool wireIsFloating = true;
 
             // Get rid of the last point as mouseDoubleClickEvent() is following mousePressEvent()
             _newWire->removeLastPoint();
-
-            // Check whether the wire was connected to a connector
-            for (const QPointF& connectionPoint : connectionPoints()) {
-                if (connectionPoint == _newWire->pointsAbsolute().last()) {
-                    wireIsFloating = false;
-                    break;
-                }
-            }
 
             // Attach point to wire if needed
             for (const auto& wire: _wireSystem->wires()) {
@@ -850,31 +858,11 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
                 if (wire->pointIsOnWire(_newWire->pointsAbsolute().last())) {
                     _wireSystem->connectWire(wire, _newWire);
                     _newWire->setPointIsJunction(_newWire->pointsAbsolute().count()-1, true);
-                    wireIsFloating = false;
                 }
             }
 
-            // Notify the user if the wire ended up on a non-valid thingy
-            if (wireIsFloating) {
-                QMessageBox msgBox;
-                msgBox.setWindowTitle("Wire mode");
-                msgBox.setIcon(QMessageBox::Information);
-                msgBox.setText("A wire must end on either:\n"
-                               "  + A node connector\n"
-                               "  + A wire\n");
-                msgBox.exec();
-
-                _newWire->removeLastPoint();
-
-                return;
-            }
-
             // Finish the current wire
-            _newWire->setAcceptHoverEvents(true);
-            _newWire->setFlag(QGraphicsItem::ItemIsSelectable, true);
-            _newWire->simplify();
-            _newWire->updatePosition();
-            _newWire.reset();
+            finishCurrentWire();
 
             return;
         }
@@ -1022,11 +1010,24 @@ void Scene::setupNewItem(Item& item)
 {
     // Set settings
     item.setSettings(_settings);
-
-    // Connections
-    connect(&item, &Item::moved, this, &Scene::itemMoved);
-    connect(&item, &Item::rotated, this, &Scene::itemRotated);
 }
+
+/**
+ * Finishes the current wire if there is one
+ */
+void Scene::finishCurrentWire()
+{
+    if (not _newWire) {
+        return;
+    }
+    // Finish the current wire
+    _newWire->setAcceptHoverEvents(true);
+    _newWire->setFlag(QGraphicsItem::ItemIsSelectable, true);
+    _newWire->simplify();
+    _newWire->updatePosition();
+    _newWire.reset();
+}
+
 
 QList<QPointF> Scene::connectionPoints() const
 {
@@ -1048,4 +1049,103 @@ QList<std::shared_ptr<Connector>> Scene::connectors() const
     }
 
     return list;
+}
+
+void Scene::itemHoverEnter(const std::shared_ptr<const Item>& item)
+{
+    emit itemHighlighted(item);
+}
+
+void Scene::itemHoverLeave([[maybe_unused]] const std::shared_ptr<const Item>& item)
+{
+    emit itemHighlighted(nullptr);
+}
+
+/**
+ * Removes the last point(s) of the new wire. After execution, the wire should
+ * be in the same state it was before the last point had been added.
+ */
+void Scene::removeLastWirePoint()
+{
+    if (not _newWire) {
+        return;
+    }
+
+    // If we're supposed to preseve right angles, two points have to be removed
+    if (_settings.routeStraightAngles) {
+        // Do nothing if there are not at least 4 points
+        if (_newWire->pointsAbsolute().count() > 3) {
+            // Keep the position of the last point
+            QPointF mousePos = _newWire->pointsAbsolute().last();
+            // Remove both points
+            _newWire->removeLastPoint();
+            _newWire->removeLastPoint();
+            // Move the new last point to where the previous last point was
+            _newWire->movePointBy(_newWire->pointsAbsolute().count() - 1, QVector2D(mousePos - _newWire->pointsAbsolute().last()));
+        }
+    }
+
+    // If we don't care about the angles, only the last point has to be removed
+    else {
+        // Do nothing if there are not at least 3 points
+        if (_newWire->pointsAbsolute().count() > 2) {
+            // Keep the position of the last point
+            QPointF mousePos = _newWire->pointsAbsolute().last();
+            // Remove the point
+            _newWire->removeLastPoint();
+            // Move the new last point to where the previous last point was
+            _newWire->movePointTo(_newWire->pointsAbsolute().count() - 1, mousePos);
+        }
+    }
+}
+
+/**
+ * Removes the wires and wire nets that are not connected to a node
+ */
+void Scene::removeUnconnectedWires()
+{
+    QList<std::shared_ptr<Wire>> wiresToRemove;
+
+    for (const auto& wire : _wireSystem->wires()) {
+        // If it has wires attached to it, go to the next wire
+        if (wire->connectedWires().count() > 0) {
+            continue;
+        }
+
+        bool isConnected = false;
+
+        // Check if it is connected to a wire
+        for (const auto& otherWire : _wireSystem->wires()) {
+            if (otherWire->connectedWires().contains(wire.get())) {
+                isConnected = true;
+                break;
+            }
+        }
+
+        // If it's connected to a wire, go to the next wire
+        if (isConnected) {
+            continue;
+        }
+
+        // Find out if it's attached to a node
+        for (const auto& connector : connectors()) {
+            if (_wireSystem->attachedWire(connector) == wire) {
+                isConnected = true;
+                break;
+            }
+        }
+
+        // If it's connected to a connector, go to the next wire
+        if (isConnected) {
+            continue;
+        }
+
+        // The wire has to be removed, add it to the list
+        wiresToRemove << wire;
+    }
+
+    // Remove the wires that have to be removed
+    for (const auto& wire : wiresToRemove) {
+        _undoStack->push(new CommandItemRemove(this, wire));
+    }
 }

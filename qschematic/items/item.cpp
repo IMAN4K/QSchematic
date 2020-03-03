@@ -316,26 +316,6 @@ QPixmap Item::toPixmap(QPointF& hotSpot, qreal scale)
     return pixmap;
 }
 
-void Item::hoverEnterEvent(QGraphicsSceneHoverEvent* event)
-{
-    Q_UNUSED(event)
-
-    setHighlighted(true);
-    emit highlightChanged(*this, true);
-
-    update();
-}
-
-void Item::hoverLeaveEvent(QGraphicsSceneHoverEvent* event)
-{
-    Q_UNUSED(event)
-
-    setHighlighted(false);
-    emit highlightChanged(*this, false);
-
-    update();
-}
-
 QVariant Item::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value)
 {
     switch (change)

@@ -58,6 +58,10 @@ namespace QSchematic {
         QList<QPointF> connectionPoints() const;
         QList<std::shared_ptr<Connector>> connectors() const;
         std::shared_ptr<WireSystem> wireSystem() const;
+        void itemHoverEnter(const std::shared_ptr<const Item>& item);
+        void itemHoverLeave(const std::shared_ptr<const Item>& item);
+        void removeLastWirePoint();
+        void removeUnconnectedWires();
 
         void undo();
         void redo();
@@ -68,7 +72,7 @@ namespace QSchematic {
         void isDirtyChanged(bool isDirty);
         void itemAdded(const std::shared_ptr<const Item> item);
         void itemRemoved(const std::shared_ptr<const Item> item);
-        void itemHighlightChanged(const std::shared_ptr<const Item> item, bool isHighlighted);
+        void itemHighlighted(const std::shared_ptr<const Item>& item);
 
     protected:
         virtual void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
@@ -90,6 +94,12 @@ namespace QSchematic {
         void renderCachedBackground();
         void setupNewItem(Item& item);
         std::shared_ptr<Item> sharedItemPointer(const Item& item) const;
+//        bool mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet);
+//        void moveWireToNet(std::shared_ptr<Wire>& rawWire, std::shared_ptr<WireNet>& newNet) const;
+//        void connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire);
+//        void disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire);
+//        QVector<std::shared_ptr<Wire>> wiresConnectedTo(const std::shared_ptr<Wire>& wire) const;
+        void finishCurrentWire();
 
         // TODO add to "central" sh-ptr management
         QList<std::shared_ptr<Item>> _keep_alive_an_event_loop;
@@ -118,17 +128,13 @@ namespace QSchematic {
         bool _invertWirePosture;
         bool _movingNodes;
         QPointF _lastMousePos;
-        // unused
-        // QList<std::shared_ptr<Item>> _selectedItems;
         QMap<std::shared_ptr<Item>, QPointF> _initialItemPositions;
         QPointF _initialCursorPosition;
         QUndoStack* _undoStack;
         std::shared_ptr<WireSystem> _wireSystem;
+        Item* _highlightedItem;
 
     private slots:
-        void itemMoved(const Item& item, const QVector2D& movedBy);
-        void itemRotated(const Item& item, const qreal rotation);
-        void itemHighlightChanged(const Item& item, bool isHighlighted);
         void updateNodeConnections(const Node* node) const;
     };
 

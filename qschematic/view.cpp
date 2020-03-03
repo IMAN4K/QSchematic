@@ -11,6 +11,7 @@
 const qreal ZOOM_FACTOR_MIN   = 0.25;
 const qreal ZOOM_FACTOR_MAX   = 10.00;
 const qreal ZOOM_FACTOR_STEPS = 0.10;
+const qreal FIT_ALL_PADDING   = 20.00;
 
 using namespace QSchematic;
 
@@ -81,9 +82,19 @@ void View::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Delete:
         if (_scene) {
-            for (auto item : _scene->selectedTopLevelItems()) {
-                _scene->undoStack()->push(new CommandItemRemove(_scene, item));
+            if (_scene->mode() == Scene::NormalMode) {
+                for (auto item : _scene->selectedTopLevelItems()) {
+                    _scene->undoStack()->push(new CommandItemRemove(_scene, item));
+                }
+            } else {
+                _scene->removeLastWirePoint();
             }
+        }
+        return;
+
+    case Qt::Key_Backspace:
+        if (_scene and _scene->mode() == Scene::WireMode) {
+            _scene->removeLastWirePoint();
         }
         return;
 
@@ -207,4 +218,35 @@ void View::setMode(Mode newMode)
 qreal View::zoomValue() const
 {
     return _scaleFactor;
+}
+
+void View::fitInView()
+{
+    // Check if there is a scene
+    if (not _scene) {
+        return;
+    }
+
+    // Find the combined bounding rect of all the items
+    QRectF rect;
+    for (const auto& item : _scene->QGraphicsScene::items()) {
+        QRectF boundingRect = item->boundingRect();
+        boundingRect.moveTo(item->scenePos());
+        rect = rect.united(boundingRect);
+    }
+
+    // Add some padding
+    const auto& adj = std::max(0.0, FIT_ALL_PADDING);
+    rect.adjust(-adj, -adj, adj, adj);
+
+    // Update and cap the scale factor
+    qreal currentScaleFactor = _scaleFactor;
+    QGraphicsView::fitInView(rect, Qt::KeepAspectRatio);
+    _scaleFactor = viewport()->geometry().width() / mapToScene(viewport()->geometry()).boundingRect().width();
+    if (currentScaleFactor < 1) {
+        _scaleFactor = std::min(_scaleFactor, 1.0);
+    } else {
+        _scaleFactor = std::min(_scaleFactor, currentScaleFactor);
+    }
+    updateScale();
 }
