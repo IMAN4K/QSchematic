@@ -223,7 +223,7 @@ QVariant Connector::itemChange(QGraphicsItem::GraphicsItemChange change, const Q
         break;
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return Item::itemChange(change, value);
 }
 
 void Connector::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
