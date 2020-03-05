@@ -36,7 +36,7 @@ void CommandItemAdd::undo()
     // Is this a wire?
     auto wire = std::dynamic_pointer_cast<Wire>(_item);
     if (wire) {
-        _scene->wireSystem()->removeWire(wire);
+        _scene->removeWire(wire);
     }
 
     // Otherwise, fall back to normal item behavior
@@ -61,7 +61,7 @@ void CommandItemAdd::redo()
             wire->net()->addWire(wire);
             _scene->addItem(wire);
         } else {
-            _scene->wireSystem()->addWire(wire);
+            _scene->addWire(wire);
         }
         for (int i = 0; i < wire->wirePointsRelative().count(); i++) {
             wire->net()->pointMovedByUser(*wire.get(), i);

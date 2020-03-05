@@ -33,7 +33,7 @@ Scene::Scene(QObject* parent) :
     setItemIndexMethod(ItemIndexMethod::NoIndex);
 
     // Wire system
-    _wireSystem = std::make_shared<WireSystem>(this);
+    _wireSystem = std::make_shared<WireSystem>();
     connect(_wireSystem.get(), &WireSystem::wirePointMoved, this, &Scene::wirePointMoved);
 
     // Undo stack
@@ -1192,4 +1192,35 @@ void Scene::removeUnconnectedWires()
     for (const auto& wire : wiresToRemove) {
         _undoStack->push(new CommandItemRemove(this, wire));
     }
+}
+
+bool Scene::addWire(const std::shared_ptr<Wire>& wire)
+{
+    if (not _wireSystem->addWire(wire)) {
+        return false;
+    }
+
+    // Add wire to scene
+    // Wires created by mouse interactions are already added to the scene in the Scene::mouseXxxEvent() calls. Prevent
+    // adding an already added item to the scene
+    if (wire->scene() != this) {
+        if (!addItem(wire)) {
+            return false;
+        }
+    }
+}
+
+bool Scene::removeWire(const std::shared_ptr<Wire>& wire)
+{
+    // Remove the wire from the scene
+    removeItem(wire);
+
+    // Disconnect from connectors
+    for (const auto& connector: connectors()) {
+        if (_wireSystem->attachedWire(connector) == wire) {
+            _wireSystem->detachWire(connector);
+        }
+    }
+
+    return _wireSystem->removeWire(wire);
 }

@@ -1,12 +1,10 @@
 #include "wiresystem.h"
-#include "scene.h"
 #include "items/node.h"
 #include <QVector2D>
 
 using namespace QSchematic;
 
-WireSystem::WireSystem(Scene* scene) :
-    _scene(scene)
+WireSystem::WireSystem()
 {
 }
 
@@ -116,16 +114,6 @@ void WireSystem::clear()
 
 bool WireSystem::removeWire(const std::shared_ptr<Wire> wire)
 {
-    // Remove the wire from the scene
-    _scene->removeItem(wire);
-
-    // Disconnect from connectors
-    for (const auto& connector: _scene->connectors()) {
-        if (attachedWire(connector) == wire) {
-            detachWire(connector);
-        }
-    }
-
     // Disconnect from connected wires
     for (const auto& otherWire: wiresConnectedTo(wire)) {
         if (otherWire != wire) {
@@ -241,15 +229,6 @@ bool WireSystem::addWire(const std::shared_ptr<Wire>& wire)
     auto newNet = std::make_shared<WireNet>();
     newNet->addWire(wire);
     addWireNet(newNet);
-
-    // Add wire to scene
-    // Wires created by mouse interactions are already added to the scene in the Scene::mouseXxxEvent() calls. Prevent
-    // adding an already added item to the scene
-    if (wire->scene() != _scene) {
-        if (!_scene->addItem(wire)) {
-            return false;
-        }
-    }
 
     return true;
 }
@@ -478,6 +457,7 @@ std::shared_ptr<Wire> WireSystem::wireWithExtremityAt(const QPointF& point)
             }
         }
     }
+    return nullptr;
 }
 
 void WireSystem::detachWireFromAll(const std::shared_ptr<Wire>& wire)

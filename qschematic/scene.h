@@ -62,6 +62,8 @@ namespace QSchematic {
         void itemHoverLeave(const std::shared_ptr<const Item>& item);
         void removeLastWirePoint();
         void removeUnconnectedWires();
+        bool addWire(const std::shared_ptr<Wire>& wire);
+        bool removeWire(const std::shared_ptr<Wire>& wire);
 
         void undo();
         void redo();
