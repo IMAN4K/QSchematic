@@ -610,7 +610,7 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
             for (auto& item : _wireSystem->wires()) {
                 Wire* wire = dynamic_cast<Wire*>(item.get());
                 if (wire) {
-                    wire->updatePosition();
+//                    wire->updatePosition();
                     wire->simplify();
                 }
             }
@@ -1068,7 +1068,7 @@ void Scene::finishCurrentWire()
     _newWire->setAcceptHoverEvents(true);
     _newWire->setFlag(QGraphicsItem::ItemIsSelectable, true);
     _newWire->simplify();
-    _newWire->updatePosition();
+//    _newWire->updatePosition();
     _newWire.reset();
 }
 

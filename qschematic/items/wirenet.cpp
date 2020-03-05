@@ -238,7 +238,7 @@ std::shared_ptr<Label> WireNet::label()
     return _label;
 }
 
-void WireNet::wirePointMoved(Wire& wire, WirePoint& point)
+void WireNet::wirePointMoved(Wire& wire, const WirePoint& point)
 {
     updateLabelPos();
     // Let the others know too

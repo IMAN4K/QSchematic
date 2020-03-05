@@ -32,6 +32,7 @@ set(SOURCES_PRIVATE
     items/wirepoint.cpp
     items/wireroundedcorners.cpp
     wire_system/wiresystem.cpp
+    wire_system/wiredata.cpp
     scene.cpp
     settings.cpp
     utils.cpp
@@ -67,6 +68,7 @@ set(HEADERS_PUBLIC
     utils/itemscontainerutils.h
     utils/itemscustodian.h
     wire_system/wiresystem.h
+    wire_system/wiredata.h
     netlist.h
     netlistgenerator.h
     scene.h

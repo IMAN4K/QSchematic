@@ -43,14 +43,14 @@ namespace QSchematic {
         std::shared_ptr<Label> label();
 
     signals:
-        void pointMoved(Wire& wire, WirePoint& point);
+        void pointMoved(Wire& wire, const WirePoint& point);
         void pointMovedByUser(Wire& wire, int index);
         void highlightChanged(bool highlighted);
         void contextMenuRequested(const QPoint& pos);
         void pointRemoved(Wire& rawWire, int index);
 
     private slots:
-        void wirePointMoved(Wire& wire, WirePoint& point);
+        void wirePointMoved(Wire& wire, const WirePoint& point);
         void wirePointMovedByUser(Wire& wire, int index);
         void labelHighlightChanged(const Item& item, bool highlighted);
         void wireHighlightChanged(const Item& item, bool highlighted);
