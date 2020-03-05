@@ -93,17 +93,6 @@ bool WireNet::addWire(const std::shared_ptr<Wire>& wire)
         return false;
     }
 
-    // Attach to connectors
-    if (wire->scene()) {
-        for (const auto& connector : wire->scene()->connectors()) {
-            if (connector->scenePos() == wire->pointsAbsolute().first()) {
-                _scene->wireSystem()->attachWireToConnector(wire, 0, connector);
-            } else if (connector->scenePos() == wire->pointsAbsolute().last()) {
-                _scene->wireSystem()->attachWireToConnector(wire, wire->pointsAbsolute().count() - 1, connector);
-            }
-        }
-    }
-
     // Update the junctions of the wires that are already in the net
     for (const auto& otherWire : wire->connectedWires()) {
         for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
