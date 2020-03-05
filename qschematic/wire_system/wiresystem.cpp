@@ -450,7 +450,7 @@ void WireSystem::detachWire(const std::shared_ptr<Connector>& connector)
 
 std::shared_ptr<Wire> WireSystem::wireWithExtremityAt(const QPointF& point)
 {
-    for (const auto& wire : _wires) {
+    for (const auto& wire : wires()) {
         for (const auto& point : wire->wirePointsAbsolute()) {
             if (point.toPoint() == point) {
                 return wire;

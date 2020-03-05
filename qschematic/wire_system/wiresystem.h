@@ -38,8 +38,6 @@ signals:
 private:
     static bool mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet);
 
-    Scene* _scene;
-    QList<std::shared_ptr<Wire>> _wires;
     QList<std::shared_ptr<WireNet>> _nets;
     void wirePointMovedByUser(Wire& rawWire, int index);
     void wireNetHighlightChanged(bool highlighted);
