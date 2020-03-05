@@ -567,7 +567,7 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
     // Move junctions that are on the point
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            const auto& point = wire->wirePointsAbsolute().at(jIndex);
+            WirePoint point = wire->wirePointsAbsolute().at(jIndex);
             if ((_points[index] + pos()).toPoint() == point.toPoint()) {
                 wire->movePointBy(jIndex, QVector2D(moveTo - (_points[index] + pos())));
             }
@@ -608,7 +608,7 @@ void Wire::moveJunctionsToNewSegment(const Line& oldSegment, const Line& newSegm
     // Move connected junctions
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            const auto& point = wire->wirePointsAbsolute().at(jIndex);
+            WirePoint point = wire->wirePointsAbsolute().at(jIndex);
             // Check if the point is on the old segment
             if (oldSegment.containsPoint(point.toPoint(), 5)) {
                 Line junctionSeg;
@@ -660,7 +660,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
     // Move connected junctions
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            const auto& point = wire->wirePointsAbsolute().at(jIndex);
+            WirePoint point = wire->wirePointsAbsolute().at(jIndex);
             Line segment = lineSegments().at(index);
             if (segment.containsPoint(point.toPointF())) {
                 // Don't move it if it is on one of the points

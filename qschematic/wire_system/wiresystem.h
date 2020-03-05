@@ -18,7 +18,6 @@ public:
     void addWireNet(const std::shared_ptr<WireNet> wireNet);
     QList<std::shared_ptr<WireNet>> nets() const;
     QList<std::shared_ptr<Wire>> wires() const;
-    void generateConnections();
     void generateJunctions();
     void connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire);
     void removeWireNet(std::shared_ptr<WireNet> net);
@@ -28,8 +27,14 @@ public:
     void disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire);
     bool addWire(const std::shared_ptr<Wire>& wire);
     void attachWireToConnector(const std::shared_ptr<Wire>& wire, int index, const std::shared_ptr<Connector>& connector);
+    void attachWireToConnector(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Connector>& connector);
     std::shared_ptr<Wire> attachedWire(const std::shared_ptr<Connector>& connector);
     int attachedWirepoint(const std::shared_ptr<Connector>& connector);
+    void detachWire(const std::shared_ptr<Connector>& connector);
+    std::shared_ptr<Wire> wireWithExtremityAt(const QPointF& point);
+
+signals:
+    void wirePointMoved(Wire& wire, int index);
 
 private:
     static bool mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet);
@@ -45,7 +50,6 @@ private:
     void pointRemoved(const std::shared_ptr<Wire>& wire, int index);
     void detachWire(const std::shared_ptr<Wire>& wire);
     void detachWireFromAll(const std::shared_ptr<Wire>& wire);
-    void detachWire(const std::shared_ptr<Connector>& connector);
     QList<std::shared_ptr<Connector>> connectorsAttachedToWire(const std::shared_ptr<Wire>& wire);
     void connectorMoved(const std::shared_ptr<Connector>& connector);
 };

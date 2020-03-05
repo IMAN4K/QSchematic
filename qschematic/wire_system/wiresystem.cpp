@@ -49,25 +49,6 @@ QList<std::shared_ptr<Wire>> WireSystem::wires() const
     return list;
 }
 
-
-void WireSystem::generateConnections()
-{
-    for (const auto& net: _nets) {
-        for (const auto& wire: net->wires()) {
-            for (const auto& node: _scene->nodes()) {
-                for (const auto& connector: node->connectors()) {
-                    for (const auto& point: wire->wirePointsAbsolute()) {
-                        if (QVector2D(connector->scenePos() - point.toPointF()).length() < 1) {
-                            attachWireToConnector(wire, wire->wirePointsAbsolute().indexOf(point), connector);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 void WireSystem::generateJunctions()
 {
     for (const auto& wire: wires()) {
@@ -276,34 +257,8 @@ bool WireSystem::addWire(const std::shared_ptr<Wire>& wire)
 void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
 {
     WirePoint point = rawWire.wirePointsRelative().at(index);
-    // Detach from connector
-    for (const auto& node: _scene->nodes()) {
-        for (const auto& connector: node->connectors()) {
-            const Wire* wire = attachedWire(connector).get();
-            if (not wire) {
-                continue;
-            }
 
-            if (wire != &rawWire) {
-                continue;
-            }
-
-            if (attachedWirepoint(connector) == index) {
-                if (connector->scenePos().toPoint() != rawWire.pointsAbsolute().at(index).toPoint()) {
-                    detachWire(connector);
-                }
-            }
-        }
-    }
-
-    // Attach to connector
-    for (const auto& node: _scene->nodes()) {
-        for (const auto& connector: node->connectors()) {
-            if (connector->scenePos().toPoint() == (rawWire.pos() + point.toPointF()).toPoint()) {
-                attachWireToConnector(rawWire.sharedPtr<Wire>(), rawWire.wirePointsRelative().indexOf(point), connector);
-            }
-        }
-    }
+    emit wirePointMoved(rawWire, index);
 
     // Detach wires
     if (index == 0 or index == rawWire.pointsAbsolute().count()-1){
@@ -439,6 +394,23 @@ void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, int in
     connect(connector.get(), &Connector::movedInScene, this, [=, connector = connector.get()] { connectorMoved(connector->sharedPtr<Connector>()); });
 }
 
+/**
+ * Connects a wire to a connector and finds out with end should be connected.
+ * \remark If the connector is not on one of the ends, it does nothing
+ */
+void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Connector>& connector)
+{
+    // Check if it's the first point
+    if (wire->wirePointsAbsolute().first().toPoint() == connector->scenePos().toPoint()) {
+        attachWireToConnector(wire, 0, connector);
+    }
+
+    // Check if it's the last point
+    else if (wire->wirePointsAbsolute().last().toPoint() == connector->scenePos().toPoint()) {
+        attachWireToConnector(wire, wire->wirePointsAbsolute().count() - 1, connector);
+    }
+}
+
 void WireSystem::pointInserted(const std::shared_ptr<Wire>& wire, int index)
 {
     for (const auto& connector : _connections.keys()) {
@@ -494,6 +466,17 @@ void WireSystem::detachWire(const std::shared_ptr<Connector>& connector)
     // Disconnect if the wire is not connected to any other connector
     if (connectorsAttachedToWire(wire).isEmpty()) {
         disconnect(wire.get(), nullptr, this, nullptr);
+    }
+}
+
+std::shared_ptr<Wire> WireSystem::wireWithExtremityAt(const QPointF& point)
+{
+    for (const auto& wire : _wires) {
+        for (const auto& point : wire->wirePointsAbsolute()) {
+            if (point.toPoint() == point) {
+                return wire;
+            }
+        }
     }
 }
 

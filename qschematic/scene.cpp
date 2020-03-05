@@ -34,6 +34,7 @@ Scene::Scene(QObject* parent) :
 
     // Wire system
     _wireSystem = std::make_shared<WireSystem>(this);
+    connect(_wireSystem.get(), &WireSystem::wirePointMoved, this, &Scene::wirePointMoved);
 
     // Undo stack
     _undoStack = new QUndoStack;
@@ -139,7 +140,7 @@ void Scene::from_container(const gpds::container& container)
     }
 
     // Attach the wires to the nodes
-    _wireSystem->generateConnections();
+    generateConnections();
 
     // Find junctions
     _wireSystem->generateJunctions();
@@ -680,6 +681,39 @@ void Scene::updateNodeConnections(const Node* node) const
     }
 }
 
+void Scene::wirePointMoved(Wire& rawWire, int index)
+{
+    // Detach from connector
+    for (const auto& node: nodes()) {
+        for (const auto& connector: node->connectors()) {
+            const Wire* wire = _wireSystem->attachedWire(connector).get();
+            if (not wire) {
+                continue;
+            }
+
+            if (wire != &rawWire) {
+                continue;
+            }
+
+            if (_wireSystem->attachedWirepoint(connector) == index) {
+                if (connector->scenePos().toPoint() != rawWire.pointsAbsolute().at(index).toPoint()) {
+                    _wireSystem->detachWire(connector);
+                }
+            }
+        }
+    }
+
+    // Attach to connector
+    WirePoint point = rawWire.wirePointsAbsolute().at(index);
+    for (const auto& node: nodes()) {
+        for (const auto& connector: node->connectors()) {
+            if (connector->scenePos().toPoint() == point.toPoint()) {
+                _wireSystem->attachWireToConnector(rawWire.sharedPtr<Wire>(), index, connector);
+            }
+        }
+    }
+}
+
 void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
     event->accept();
@@ -1010,6 +1044,16 @@ void Scene::setupNewItem(Item& item)
 {
     // Set settings
     item.setSettings(_settings);
+}
+
+void Scene::generateConnections()
+{
+    for (const auto& connector : connectors()) {
+        std::shared_ptr<Wire> wire = _wireSystem->wireWithExtremityAt(connector->scenePos());
+        if (wire) {
+            _wireSystem->attachWireToConnector(wire, connector);
+        }
+    }
 }
 
 /**

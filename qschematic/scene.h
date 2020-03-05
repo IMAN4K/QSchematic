@@ -94,11 +94,7 @@ namespace QSchematic {
         void renderCachedBackground();
         void setupNewItem(Item& item);
         std::shared_ptr<Item> sharedItemPointer(const Item& item) const;
-//        bool mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet);
-//        void moveWireToNet(std::shared_ptr<Wire>& rawWire, std::shared_ptr<WireNet>& newNet) const;
-//        void connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire);
-//        void disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire);
-//        QVector<std::shared_ptr<Wire>> wiresConnectedTo(const std::shared_ptr<Wire>& wire) const;
+        void generateConnections();
         void finishCurrentWire();
 
         // TODO add to "central" sh-ptr management
@@ -136,6 +132,7 @@ namespace QSchematic {
 
     private slots:
         void updateNodeConnections(const Node* node) const;
+        void wirePointMoved(Wire& wire, int index);
     };
 
 }
