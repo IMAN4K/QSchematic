@@ -1,6 +1,11 @@
 #include "wire.h"
 using namespace wire_system;
 
+QVector<WirePoint> wire::points() const
+{
+    return _points;
+}
+
 int wire::points_count() const
 {
     return _points.count();

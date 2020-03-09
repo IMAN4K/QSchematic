@@ -54,13 +54,13 @@ void WireSystem::generateJunctions()
             if (wire == otherWire) {
                 continue;
             }
-            if (wire->pointIsOnWire(otherWire->wirePointsAbsolute().first().toPointF())) {
+            if (wire->pointIsOnWire(otherWire->points().first().toPointF())) {
                 connectWire(wire, otherWire);
                 otherWire->setPointIsJunction(0, true);
             }
-            if (wire->pointIsOnWire(otherWire->wirePointsAbsolute().last().toPointF())) {
+            if (wire->pointIsOnWire(otherWire->points().last().toPointF())) {
                 connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(otherWire->wirePointsAbsolute().count() - 1, true);
+                otherWire->setPointIsJunction(otherWire->points().count() - 1, true);
             }
         }
     }
@@ -120,7 +120,7 @@ bool WireSystem::removeWire(const std::shared_ptr<Wire> wire)
             disconnectWire(otherWire, wire);
             // Update the junction on the other wire
             for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
-                const auto point = otherWire->wirePointsAbsolute().at(index);
+                const auto point = otherWire->points().at(index);
                 if (not point.isJunction()) {
                     continue;
                 }
@@ -252,7 +252,7 @@ void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
                     bool shouldDisconnect = true;
                     // Keep the wires connected if there is another junction
                     for (const auto& jIndex : rawWire.junctions()) {
-                        const auto& junction = rawWire.wirePointsAbsolute().at(jIndex);
+                        const auto& junction = rawWire.points().at(jIndex);
                         // Ignore the point that moved
                         if (jIndex == index) {
                             continue;
@@ -274,13 +274,13 @@ void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
     }
 
     // Attach point to wire if needed
-    if (index == 0 or index == rawWire.wirePointsAbsolute().count() - 1) {
+    if (index == 0 or index == rawWire.points().count() - 1) {
         for (const auto& wire: wires()) {
             // Skip current wire
             if (wire.get() == &rawWire) {
                 continue;
             }
-            if (wire->pointIsOnWire(rawWire.wirePointsAbsolute().at(index).toPointF())) {
+            if (wire->pointIsOnWire(rawWire.points().at(index).toPointF())) {
                 if (not rawWire.connected_wires().contains(wire.get())) {
                     rawWire.setPointIsJunction(index, true);
                     auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
@@ -351,7 +351,7 @@ void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, int in
     }
 
     // TODO: Check if it make sense for the index to be -1 or is this an error?
-    if (index < -1 or wire->wirePointsAbsolute().count() < index) {
+    if (index < -1 or wire->points().count() < index) {
         return;
     }
 
@@ -380,13 +380,13 @@ void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, int in
 void WireSystem::attachWireToConnector(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Connector>& connector)
 {
     // Check if it's the first point
-    if (wire->wirePointsAbsolute().first().toPoint() == connector->scenePos().toPoint()) {
+    if (wire->points().first().toPoint() == connector->scenePos().toPoint()) {
         attachWireToConnector(wire, 0, connector);
     }
 
     // Check if it's the last point
-    else if (wire->wirePointsAbsolute().last().toPoint() == connector->scenePos().toPoint()) {
-        attachWireToConnector(wire, wire->wirePointsAbsolute().count() - 1, connector);
+    else if (wire->points().last().toPoint() == connector->scenePos().toPoint()) {
+        attachWireToConnector(wire, wire->points().count() - 1, connector);
     }
 }
 
@@ -451,7 +451,7 @@ void WireSystem::detachWire(const std::shared_ptr<Connector>& connector)
 std::shared_ptr<Wire> WireSystem::wireWithExtremityAt(const QPointF& point)
 {
     for (const auto& wire : wires()) {
-        for (const auto& point : wire->wirePointsAbsolute()) {
+        for (const auto& point : wire->points()) {
             if (point.toPoint() == point) {
                 return wire;
             }
@@ -506,7 +506,7 @@ void WireSystem::connectorMoved(const std::shared_ptr<Connector>& connector)
         return;
     }
 
-    QPointF oldPos = wirePoint.first->wirePointsAbsolute().at(wirePoint.second).toPointF();
+    QPointF oldPos = wirePoint.first->points().at(wirePoint.second).toPointF();
     QVector2D moveBy = QVector2D(connector->scenePos() - oldPos);
     if (not moveBy.isNull()) {
         wirePoint.first->movePointBy(wirePoint.second, moveBy);

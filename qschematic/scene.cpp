@@ -650,14 +650,14 @@ void Scene::updateNodeConnections(const Node* node) const
         // Find if there is a point to connect to
         for (const auto& wire : _wireSystem->wires()) {
             int index = -1;
-            if (wire->wirePointsAbsolute().first().toPoint() == connector->scenePos().toPoint()) {
+            if (wire->points().first().toPoint() == connector->scenePos().toPoint()) {
                 index = 0;
-            } else if (wire->wirePointsAbsolute().last().toPoint() == connector->scenePos().toPoint()) {
-                index = wire->wirePointsAbsolute().count() - 1;
+            } else if (wire->points().last().toPoint() == connector->scenePos().toPoint()) {
+                index = wire->points().count() - 1;
             }
             if (index != -1) {
                 // Ignore if it's a junction
-                if (wire->wirePointsAbsolute().at(index).isJunction()){
+                if (wire->points().at(index).isJunction()){
                     continue;
                 }
                 // Check if it isn't already connected to another connector
@@ -704,7 +704,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
     }
 
     // Attach to connector
-    WirePoint point = rawWire.wirePointsAbsolute().at(index);
+    WirePoint point = rawWire.points().at(index);
     for (const auto& node: nodes()) {
         for (const auto& connector: node->connectors()) {
             if (connector->scenePos().toPoint() == point.toPoint()) {
