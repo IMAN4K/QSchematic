@@ -5,6 +5,15 @@
 
 using namespace wire_system;
 
+wire::wire() : m_manager(nullptr)
+{
+}
+
+void wire::set_manager(wire_system::wire_manager* manager)
+{
+    m_manager = manager;
+}
+
 QVector<WirePoint> wire::points() const
 {
     return _points;

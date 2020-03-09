@@ -1200,6 +1200,8 @@ bool Scene::addWire(const std::shared_ptr<Wire>& wire)
         return false;
     }
 
+    wire->set_manager(_wireSystem);
+
     // Add wire to scene
     // Wires created by mouse interactions are already added to the scene in the Scene::mouseXxxEvent() calls. Prevent
     // adding an already added item to the scene
