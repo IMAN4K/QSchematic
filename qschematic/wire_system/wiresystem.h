@@ -8,12 +8,16 @@
 namespace QSchematic
 {
     class Connector;
+}
 
-class WireSystem : public QObject
+namespace wire_system
+{
+
+class wire_manager : public QObject
 {
     Q_OBJECT
 public:
-    WireSystem();
+    wire_manager();
     void addWireNet(const std::shared_ptr<WireNet> wireNet);
     QList<std::shared_ptr<WireNet>> nets() const;
     QList<std::shared_ptr<Wire>> wires() const;

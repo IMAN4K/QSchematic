@@ -33,8 +33,8 @@ Scene::Scene(QObject* parent) :
     setItemIndexMethod(ItemIndexMethod::NoIndex);
 
     // Wire system
-    _wireSystem = std::make_shared<WireSystem>();
-    connect(_wireSystem.get(), &WireSystem::wirePointMoved, this, &Scene::wirePointMoved);
+    _wireSystem = std::make_shared<wire_system::wire_manager>();
+    connect(_wireSystem.get(), &wire_system::wire_manager::wirePointMoved, this, &Scene::wirePointMoved);
 
     // Undo stack
     _undoStack = new QUndoStack;
@@ -432,7 +432,7 @@ QUndoStack* Scene::undoStack() const
     return _undoStack;
 }
 
-std::shared_ptr<WireSystem> Scene::wireSystem() const
+std::shared_ptr<wire_system::wire_manager> Scene::wireSystem() const
 {
     return _wireSystem;
 }

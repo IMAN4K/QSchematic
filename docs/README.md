@@ -101,7 +101,7 @@ after the move.
 
 When one of the wires extremities (first or last point) is moved onto another
 wire it becomes a junction. The logic related to the junctions is mostly
-implemented in the `WireSystem` class and this will be elaborated on in the
+implemented in the `wire_manager` class and this will be elaborated on in the
 **Nets** chapter.
 
 ### Updating junctions
@@ -125,10 +125,10 @@ anything because the point will technically no longer be on the segment.
 ## Connectors
 
 When the extremity of a wire is moved onto a connector it gets connected to it.
-This is implemented in `WireSystem::attachWireToConnector()`. There are quite
+This is implemented in `wire_manager::attachWireToConnector()`. There are quite
 a few places this has to be used.
 
-The most straightforward being in `WireSystem::wirePointMovedByUser()`. As
+The most straightforward being in `wire_manager::wirePointMovedByUser()`. As
 the name suggests, this method gets called whenever a point is moved by the
 user.
 
@@ -141,7 +141,7 @@ for connections.
 
 When loading a file all the connections have to be generated from the
 position of the wires and the connectors. This is done in
-`WireSystem::generateConnections()`.
+`wire_manager::generateConnections()`.
 
 It is also possible to connect a connector to a point by moving it onto the
 point. This is done in `Scene::mouseReleaseEvent()` by calling
@@ -152,27 +152,27 @@ point. This is done in `Scene::mouseReleaseEvent()` by calling
 ### Moving a point
 
 When a point is moved away or onto another wire they have to be connected or
-disconnected accordingly. This is done in `WireSystem::wirePointMovedByUser()`.
-If two wires have to be connected it calls `WireSystem::connectWire()` and if
-they have to be disconnected it calls `WireSystem::disconnectWire()`.
+disconnected accordingly. This is done in `wire_manager::wirePointMovedByUser()`.
+If two wires have to be connected it calls `wire_manager::connectWire()` and if
+they have to be disconnected it calls `wire_manager::disconnectWire()`.
 
 ### Adding a wire
 
 When `CommandItemAdd::redo()` is called it checks if a wire has a previous net
 stored in `Wire::net()`. If there is already one, it makes sure that it's in
 the scene and adds the wire to it. If it has no previous net, a new net has
-to be created but this is delegated to the `WireSystem` by calling `addWire()`.
+to be created but this is delegated to the `wire_manager` by calling `addWire()`.
 
 #### Undoing
 
-When the command is undone, it simply calls `WireSystem::removeWire()`.
+When the command is undone, it simply calls `wire_manager::removeWire()`.
 
 ### Removing a wire
 
-When a wire is removed by a `CommandItemRemove`, `WireSystem::removeWire()`
+When a wire is removed by a `CommandItemRemove`, `wire_manager::removeWire()`
 is called. This removes the wire from the scene, detaches it from every
 connector, disconnects it from all the wires it is attached to
-(`WireSystem::disconnectWire()`), removes it from its net and removes the net
+(`wire_manager::disconnectWire()`), removes it from its net and removes the net
 from the scene if it was the last wire in it. The wire keeps a shared_ptr to
 the net, so that if the command is undone, it can be added to the same net.
 
@@ -186,17 +186,17 @@ added to the net which will
 
 When two wires from different nets are connected, we need to merge both nets.
 It will always use the net of the wire the other one is connecting to. The
-`WireSystem::connectWire()` method will simply retrieve both nets and call
-`WireSystem::mergeNets()` that will then move all the wired from one net to
+`wire_manager::connectWire()` method will simply retrieve both nets and call
+`wire_manager::mergeNets()` that will then move all the wired from one net to
 the other.
 
 ### Disconnecting wires
 
-The `WireSystem::disconnectWire(std::shared_ptr<Wire> w1,
+The `wire_manager::disconnectWire(std::shared_ptr<Wire> w1,
 std::shared_ptr<Wire> w2)` function disconnects a wire (w2) from another wire
 (w1). It first calls `w1->disconnectWire(w2)` so that w1 no longer considers
 w2 as being connected to it. Then, it calls
-`WireSystem::wiresConnectedTo(w1)` to get a list of all the wires that are
+`wire_manager::wiresConnectedTo(w1)` to get a list of all the wires that are
 connected to w1 or that w1 is connected to. If there are wires in the net
 that are not in that list, a new net has to be created and those wires must
 be moved to it. This makes sure that if the wire that is being disconnected
