@@ -11,7 +11,7 @@ namespace wire_system
     {
 
     public:
-        int pointCount() const;
+        int points_count() const;
 
 
     protected: // TODO: All these members should be private
