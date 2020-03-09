@@ -216,7 +216,7 @@ QList<Line> WireNet::lineSegments() const
             continue;
         }
 
-        list.append(wire.lock()->lineSegments());
+        list.append(wire.lock()->line_segments());
     }
 
     return list;
@@ -260,7 +260,7 @@ void WireNet::updateLabelPos(bool updateParent) const
     std::shared_ptr<Wire> closestWire;
     for (const auto& wire : _wires) {
         std::shared_ptr<Wire> spWire = wire.lock();
-        for (const auto& segment: spWire->lineSegments()) {
+        for (const auto& segment: spWire->line_segments()) {
             // Find closest point on segment
             QPointF p = Utils::pointOnLineClosestToPoint(segment.p1(), segment.p2(), labelPos);
             float distance1 = QVector2D(labelPos - closestPoint).lengthSquared();

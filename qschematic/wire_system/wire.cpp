@@ -1,4 +1,6 @@
+#include <items/line.h>
 #include "wire.h"
+
 using namespace wire_system;
 
 QVector<WirePoint> wire::points() const
@@ -29,4 +31,19 @@ QVector<int> wire::junctions() const
 QList<Wire*> wire::connected_wires()
 {
     return _connectedWires;
+}
+
+QList<Line> wire::line_segments() const
+{
+    // A line segment requires at least two points... duuuh
+    if (points_count() < 2) {
+        return QList<Line>();
+    }
+
+    QList<Line> ret;
+    for (int i = 0; i < points_count() - 1; i++) {
+        ret.append(Line(_points.at(i).toPointF(), _points.at(i+1).toPointF()));
+    }
+
+    return ret;
 }

@@ -54,8 +54,6 @@ namespace QSchematic {
         bool movingWirePoint() const;
         void updatePosition();
 
-        QList<QSchematic::Line> lineSegments() const;
-
     signals:
         void pointMoved(Wire& wire, WirePoint& point);
         void pointMovedByUser(Wire& wire, int index);

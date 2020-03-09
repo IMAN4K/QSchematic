@@ -19,6 +19,7 @@ namespace wire_system
         int points_count() const;
         QVector<int> junctions() const;
         QList<Wire*> connected_wires();
+        QList<Line> line_segments() const;
 
     protected: // TODO: All these members should be private
         QVector<WirePoint> _points;

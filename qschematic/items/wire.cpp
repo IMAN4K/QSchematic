@@ -282,7 +282,7 @@ void Wire::insertPoint(int index, const QPointF& point)
         return;
     }
 
-    Line segment = lineSegments().at(index - 1);
+    Line segment = line_segments().at(index - 1);
     // If the point is not on the segment, move the junctions
     if (not segment.containsPoint(point)) {
         // Find the closest point on the segment
@@ -333,16 +333,16 @@ void Wire::removePoint(int index)
     // Move the junction on the previous and next segments
     if (index > 0 and index < points_count() - 1) {
         Line newSegment(pointsAbsolute().at(index - 1), pointsAbsolute().at(index + 1));
-        moveJunctionsToNewSegment(lineSegments().at(index - 1), newSegment);
-        moveJunctionsToNewSegment(lineSegments().at(index), newSegment);
+        moveJunctionsToNewSegment(line_segments().at(index - 1), newSegment);
+        moveJunctionsToNewSegment(line_segments().at(index), newSegment);
     } else {
         for (const auto& wire: connected_wires()) {
             for (int junctionIndex: wire->junctions()) {
                 QPointF point = wire->pointsAbsolute().at(junctionIndex);
-                if (lineSegments().first().containsPoint(point)) {
+                if (line_segments().first().containsPoint(point)) {
                     wire->movePointTo(junctionIndex, pointsAbsolute().at(1));
                 }
-                if (lineSegments().last().containsPoint(point)) {
+                if (line_segments().last().containsPoint(point)) {
                     wire->movePointTo(junctionIndex, pointsAbsolute().at(pointsAbsolute().count() - 2));
                 }
             }
@@ -415,7 +415,7 @@ void Wire::movePointBy(int index, const QVector2D& moveBy)
     // straight angles, we need to insert two additional points if we are not moving in
     // the direction of the line.
     if (pointsRelative().count() == 2 && _settings.preserveStraightAngles) {
-        const Line line = lineSegments().first();
+        const Line line = line_segments().first();
 
         bool moveVertically = line.isHorizontal() and not qFuzzyIsNull(moveBy.y());
         bool moveHorizontally = line.isVertical() and not qFuzzyIsNull(moveBy.x());
@@ -572,14 +572,14 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
 
     // Move junctions on the next segment
     if (index < points_count() - 1) {
-        Line segment = lineSegments().at(index);
+        Line segment = line_segments().at(index);
         Line newSegment(moveTo, pointsAbsolute().at(index+1));
         moveJunctionsToNewSegment(segment, newSegment);
     }
 
     // Move junctions on the previous segment
     if (index > 0) {
-        Line segment = lineSegments().at(index-1);
+        Line segment = line_segments().at(index - 1);
         Line newSegment(pointsAbsolute().at(index-1), moveTo);
         moveJunctionsToNewSegment(segment, newSegment);
     }
@@ -610,13 +610,13 @@ void Wire::moveJunctionsToNewSegment(const Line& oldSegment, const Line& newSegm
                 Line junctionSeg;
                 // Find out if one of the segments is horizontal or vertical
                 if (jIndex < wire->points().count() - 1) {
-                    Line seg = wire->lineSegments().at(jIndex);
+                    Line seg = wire->line_segments().at(jIndex);
                     if (seg.isHorizontal() or seg.isVertical()) {
                         junctionSeg = seg;
                     }
                 }
                 if (jIndex > 0) {
-                    Line seg = wire->lineSegments().at(jIndex-1);
+                    Line seg = wire->line_segments().at(jIndex - 1);
                     if (seg.isHorizontal() or seg.isVertical()) {
                         junctionSeg = seg;
                     }
@@ -657,7 +657,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
             WirePoint point = wire->points().at(jIndex);
-            Line segment = lineSegments().at(index);
+            Line segment = line_segments().at(index);
             if (segment.containsPoint(point.toPointF())) {
                 // Don't move it if it is on one of the points
                 if (segment.p1().toPoint() == point.toPoint() or segment.p2().toPoint() == point.toPoint()) {
@@ -669,7 +669,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
     }
 
     // If this is the first or last segment we might need to add a new segment
-    if (index == 0 or index == lineSegments().count() - 1) {
+    if (index == 0 or index == line_segments().count() - 1) {
         // Get the correct point
         WirePoint point;
         if (index == 0) {
@@ -741,7 +741,7 @@ void Wire::setPointIsJunction(int index, bool isJunction)
 
 bool Wire::pointIsOnWire(const QPointF& point) const
 {
-    for (const Line& lineSegment : lineSegments()) {
+    for (const Line& lineSegment : line_segments()) {
         if (lineSegment.containsPoint(point, 0)) {
             return true;
         }
@@ -764,21 +764,6 @@ void Wire::disconnectWire(Wire* wire)
     _connectedWires.removeAll(wire);
 }
 
-QList<Line> Wire::lineSegments() const
-{
-    // A line segment requires at least two points... duuuh
-    if (points_count() < 2) {
-        return QList<Line>();
-    }
-
-    QList<Line> ret;
-    for (int i = 0; i < points_count() - 1; i++) {
-        ret.append(Line(_points.at(i).toPointF(), _points.at(i+1).toPointF()));
-    }
-
-    return ret;
-}
-
 void Wire::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     // Check wheter we clicked on a handle
@@ -797,7 +782,7 @@ void Wire::mousePressEvent(QGraphicsSceneMouseEvent* event)
         }
 
         // Check whether we clicked on a line segment
-        QList<Line> lines = lineSegments();
+        QList<Line> lines = line_segments();
         for (int i = 0; i < lines.count(); i++) {
             const Line& line = lines.at(i);
             if (line.containsPoint(event->scenePos(), 1)) {
@@ -857,7 +842,7 @@ void Wire::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
         event->accept();
 
         // Determine movement vector
-        const Line line = lineSegments().at(_lineSegmentToMoveIndex);
+        const Line line = line_segments().at(_lineSegmentToMoveIndex);
         QVector2D moveLineBy(0, 0);
         if (line.isHorizontal()) {
             moveLineBy = QVector2D(0, static_cast<float>(curPos.y() - _prevMousePos.y()));
@@ -921,7 +906,7 @@ void Wire::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 
     // Check whether we hover over a line segment
     bool ctrlPressed = QApplication::keyboardModifiers() & Qt::ControlModifier;
-    QList<Line> lines = lineSegments();
+    QList<Line> lines = line_segments();
     for (int i = 0; i < lines.count(); i++) {
         // Retrieve the line segment
         const Line& line = lines.at(i);
@@ -1123,8 +1108,8 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
 
     // Add a point at the cursor
     if (command == actionAdd) {
-        for (int i = 0; i < lineSegments().count(); i++) {
-            if (lineSegments().at(i).containsPoint(event->scenePos(), 4)) {
+        for (int i = 0; i < line_segments().count(); i++) {
+            if (line_segments().at(i).containsPoint(event->scenePos(), 4)) {
                 setSelected(true);
                 insertPoint(i + 1, _settings.snapToGrid(event->scenePos()));
                 break;
@@ -1141,7 +1126,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
     if (not labelWasVisible and net()->label()->isVisible()) {
         // Find line segment
         Line seg;
-        QList<Line> lines = lineSegments();
+        QList<Line> lines = line_segments();
         for (const auto& line : lines) {
             if (line.containsPoint(event->scenePos(), WIRE_SHAPE_PADDING/2)) {
                 seg = line;
