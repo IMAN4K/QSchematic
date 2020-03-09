@@ -16,6 +16,7 @@ namespace wire_system
 
     public:
         int points_count() const;
+        QVector<int> junctions() const;
 
 
     protected: // TODO: All these members should be private
