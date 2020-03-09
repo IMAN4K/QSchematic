@@ -294,8 +294,8 @@ void Wire::insertPoint(int index, const QPointF& point)
         Line seg1new(segment.p1(), point);
         Line seg2new(point, segment.p2());
         // Move the junction on both lines
-        moveJunctionsToNewSegment(seg1, seg1new);
-        moveJunctionsToNewSegment(seg2, seg2new);
+        move_junctions_to_new_segment(seg1, seg1new);
+        move_junctions_to_new_segment(seg2, seg2new);
     }
 
     prepareGeometryChange();
@@ -333,8 +333,8 @@ void Wire::removePoint(int index)
     // Move the junction on the previous and next segments
     if (index > 0 and index < points_count() - 1) {
         Line newSegment(pointsAbsolute().at(index - 1), pointsAbsolute().at(index + 1));
-        moveJunctionsToNewSegment(line_segments().at(index - 1), newSegment);
-        moveJunctionsToNewSegment(line_segments().at(index), newSegment);
+        move_junctions_to_new_segment(line_segments().at(index - 1), newSegment);
+        move_junctions_to_new_segment(line_segments().at(index), newSegment);
     } else {
         for (const auto& wire: connected_wires()) {
             for (int junctionIndex: wire->junctions()) {
@@ -574,14 +574,14 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
     if (index < points_count() - 1) {
         Line segment = line_segments().at(index);
         Line newSegment(moveTo, pointsAbsolute().at(index+1));
-        moveJunctionsToNewSegment(segment, newSegment);
+        move_junctions_to_new_segment(segment, newSegment);
     }
 
     // Move junctions on the previous segment
     if (index > 0) {
         Line segment = line_segments().at(index - 1);
         Line newSegment(pointsAbsolute().at(index-1), moveTo);
-        moveJunctionsToNewSegment(segment, newSegment);
+        move_junctions_to_new_segment(segment, newSegment);
     }
 
     prepareGeometryChange();
@@ -592,53 +592,6 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
     emit pointMoved(*this, wirePointsRelative()[index]);
     calculateBoundingRect();
     update();
-}
-
-void Wire::moveJunctionsToNewSegment(const Line& oldSegment, const Line& newSegment)
-{
-    // Do nothing if the segment was just resized
-    if (qFuzzyCompare(oldSegment.toLineF().angle(), newSegment.toLineF().angle())) {
-        return;
-    }
-
-    // Move connected junctions
-    for (const auto& wire: _connectedWires) {
-        for (const auto& jIndex: wire->junctions()) {
-            WirePoint point = wire->points().at(jIndex);
-            // Check if the point is on the old segment
-            if (oldSegment.containsPoint(point.toPoint(), 5)) {
-                Line junctionSeg;
-                // Find out if one of the segments is horizontal or vertical
-                if (jIndex < wire->points().count() - 1) {
-                    Line seg = wire->line_segments().at(jIndex);
-                    if (seg.isHorizontal() or seg.isVertical()) {
-                        junctionSeg = seg;
-                    }
-                }
-                if (jIndex > 0) {
-                    Line seg = wire->line_segments().at(jIndex - 1);
-                    if (seg.isHorizontal() or seg.isVertical()) {
-                        junctionSeg = seg;
-                    }
-                }
-                // Only move in the direction of the segment if it is hor. or vert.
-                if (!junctionSeg.isNull()) {
-                    QPointF intersection;
-                    auto type = junctionSeg.toLineF().intersect(newSegment.toLineF(), &intersection);
-                    if (type != QLineF::NoIntersection) {
-                        wire->movePointBy(jIndex, QVector2D(intersection - point.toPointF()));
-                    }
-                }
-                // Move the point along the segment so that it stays at the same proportional distance from the two points
-                else {
-                    QPointF d =  point.toPointF() - oldSegment.p1();
-                    qreal ratio = QVector2D(d).length() / oldSegment.lenght();
-                    QPointF pos = newSegment.toLineF().pointAt(ratio);
-                    wire->movePointBy(jIndex, QVector2D(pos - point.toPointF()));
-                }
-            }
-        }
-    }
 }
 
 void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)

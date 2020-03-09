@@ -22,6 +22,8 @@ namespace wire_system
         QList<Line> line_segments() const;
 
     protected: // TODO: All these members should be private
+        void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
+
         QVector<WirePoint> _points;
         QList<Wire*> _connectedWires; // TODO: Should be QList<wire_system::wire>
     };

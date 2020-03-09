@@ -87,7 +87,6 @@ namespace QSchematic {
         int _lineSegmentToMoveIndex;
         QPointF _prevMousePos;
         QPointF _offset;
-        void moveJunctionsToNewSegment(const Line& oldSegment, const Line& newSegment);
         QAction* _renameAction;
         std::shared_ptr<WireNet> _net;
         bool _internalMove;
