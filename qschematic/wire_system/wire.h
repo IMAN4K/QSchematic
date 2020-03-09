@@ -20,6 +20,7 @@ namespace wire_system
         QVector<int> junctions() const;
         QList<Wire*> connected_wires();
         QList<Line> line_segments() const;
+        virtual void move_point_to(int index, const QPointF& moveTo);
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);

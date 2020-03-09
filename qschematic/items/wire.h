@@ -43,7 +43,7 @@ namespace QSchematic {
         QVector<QPointF> pointsAbsolute() const;
         void simplify();
         void movePointBy(int index, const QVector2D& moveBy);
-        void movePointTo(int index, const QPointF& moveTo);
+        void move_point_to(int index, const QPointF& moveTo) override;
         void moveLineSegmentBy(int index, const QVector2D& moveBy);
         void setPointIsJunction(int index, bool isJunction);
         bool pointIsOnWire(const QPointF& point) const;

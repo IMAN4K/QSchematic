@@ -1,8 +1,7 @@
 #include <items/line.h>
 #include "wire.h"
-#include "items/wire.h"
+#include "items/wire.h" // TODO: This has to be removed
 #include <QVector2D>
-#include <QLine>
 
 using namespace wire_system;
 
@@ -88,7 +87,7 @@ void wire::move_junctions_to_new_segment(const Line& oldSegment, const Line& new
                 }
                     // Move the point along the segment so that it stays at the same proportional distance from the two points
                 else {
-                    QPointF d =  point.toPointF() - oldSegment.p1();
+                    QPointF d = point.toPointF() - oldSegment.p1();
                     qreal ratio = QVector2D(d).length() / oldSegment.lenght();
                     QPointF pos = newSegment.toLineF().pointAt(ratio);
                     wire->movePointBy(jIndex, QVector2D(pos - point.toPointF()));
@@ -96,4 +95,44 @@ void wire::move_junctions_to_new_segment(const Line& oldSegment, const Line& new
             }
         }
     }
+}
+
+void wire::move_point_to(int index, const QPointF& moveTo)
+{
+    if (index < 0 or index > points_count() - 1) {
+        return;
+    }
+
+    // Do nothing if it already is at that position
+    if (points().at(index) == moveTo) {
+        return;
+    }
+
+    // Move junctions that are on the point
+    for (const auto& wire: _connectedWires) {
+        for (const auto& jIndex: wire->junctions()) {
+            WirePoint point = wire->points().at(jIndex);
+            if ((_points[index]).toPoint() == point.toPoint()) {
+                wire->movePointBy(jIndex, QVector2D(moveTo - _points[index].toPointF()));
+            }
+        }
+    }
+
+    // Move junctions on the next segment
+    if (index < points_count() - 1) {
+        Line segment = line_segments().at(index);
+        Line newSegment(moveTo, points().at(index+1).toPointF());
+        move_junctions_to_new_segment(segment, newSegment);
+    }
+
+    // Move junctions on the previous segment
+    if (index > 0) {
+        Line segment = line_segments().at(index - 1);
+        Line newSegment(points().at(index-1).toPointF(), moveTo);
+        move_junctions_to_new_segment(segment, newSegment);
+    }
+
+    WirePoint wirepoint = moveTo;
+    wirepoint.setIsJunction(_points[index].isJunction());
+    _points[index] = wirepoint;
 }

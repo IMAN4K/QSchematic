@@ -842,13 +842,13 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
                 }
 
                 // Modify the actual wire
-                _newWire->movePointTo(_newWire->pointsAbsolute().count()-2, p2);
-                _newWire->movePointTo(_newWire->pointsAbsolute().count()-1, p3);
+                _newWire->move_point_to(_newWire->pointsAbsolute().count() - 2, p2);
+                _newWire->move_point_to(_newWire->pointsAbsolute().count() - 1, p3);
             }
         } else {
             // Don't care about angles and stuff. Fuck geometry, right?
             if (_newWire->pointsAbsolute().count() > 1) {
-                _newWire->movePointTo(_newWire->pointsAbsolute().count()-1, snappedPos);
+                _newWire->move_point_to(_newWire->pointsAbsolute().count() - 1, snappedPos);
             } else {
                 _newWire->appendPoint(snappedPos);
             }
@@ -1138,7 +1138,7 @@ void Scene::removeLastWirePoint()
             // Remove the point
             _newWire->removeLastPoint();
             // Move the new last point to where the previous last point was
-            _newWire->movePointTo(_newWire->pointsAbsolute().count() - 1, mousePos);
+            _newWire->move_point_to(_newWire->pointsAbsolute().count() - 1, mousePos);
         }
     }
 }

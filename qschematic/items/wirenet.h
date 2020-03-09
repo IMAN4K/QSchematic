@@ -35,6 +35,7 @@ namespace QSchematic {
         void setHighlighted(bool highlighted);
         void setScene(Scene* scene);
         void updateLabelPos(bool updateParent = false) const;
+        void wirePointMoved(Wire& wire, const WirePoint& point);
 
         QString name() const;
         QList<std::shared_ptr<Wire>> wires() const;
@@ -50,7 +51,6 @@ namespace QSchematic {
         void pointRemoved(Wire& rawWire, int index);
 
     private slots:
-        void wirePointMoved(Wire& wire, const WirePoint& point);
         void wirePointMovedByUser(Wire& wire, int index);
         void labelHighlightChanged(const Item& item, bool highlighted);
         void wireHighlightChanged(const Item& item, bool highlighted);

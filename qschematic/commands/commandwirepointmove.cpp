@@ -73,7 +73,7 @@ void CommandWirepointMove::undo()
 
     for (int i = 0; i < _oldPos.count(); i++) {
         if (_newPos[i] != _oldPos[i]) {
-            _wire->movePointTo(i, _oldPos[i]);
+            _wire->move_point_to(i, _oldPos[i]);
             _wire->net()->pointMovedByUser(*_wire.get(), i);
         }
     }
@@ -96,7 +96,7 @@ void CommandWirepointMove::redo()
 {
     for (int i = 0; i < _newPos.count(); i++) {
         if (_newPos[i] != _oldPos[i]) {
-            _wire->movePointTo(i, _newPos[i]);
+            _wire->move_point_to(i, _newPos[i]);
             _wire->net()->pointMovedByUser(*_wire.get(), i);
         }
     }

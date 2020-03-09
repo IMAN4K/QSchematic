@@ -80,11 +80,11 @@ adjustments like moving the points back on to their connectors.
 ### Moving
 
 There are two ways of moving a point a wire: `Wire::movePointBy()` and
-`Wire::movePointTo()`. The first one moves a point relative to it's position
+`Wire::move_point_to()`. The first one moves a point relative to it's position
 and the other moves it to a absolute position on the scene. This is not the
 only difference though, the first one will take care of some additional stuff
 like making sure that right angles are preserved if this is expected. The
-second one, `Wire::movePointTo()`, only moves the point to a position without
+second one, `Wire::move_point_to()`, only moves the point to a position without
 worrying about anything else.
 
 > Try to never use `QList::indexOf()` to get the index of the point because
@@ -113,11 +113,11 @@ a part of the wire that is changing.
 
 In `Wire::movePointBy()` we move the junctions that are on the next and previous
 segment but only if the segment is horizontal or vertical. If it's not, it
-will be taken care of by `Wire::movePointTo()`.
+will be taken care of by `Wire::move_point_to()`.
 
 In `Wire::moveLineSegmentBy()` we move the junctions that are on the segment.
 
-In `Wire::movePointTo()` we move the junctions that are on the point we are
+In `Wire::move_point_to()` we move the junctions that are on the point we are
 moving and those that are on the segments attached to the point. If the
 junction has already moved by one of the previous algorithms this won't do
 anything because the point will technically no longer be on the segment.
