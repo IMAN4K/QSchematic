@@ -155,20 +155,20 @@ QPainterPath Wire::shape() const
 
 QVector<WirePoint> Wire::wirePointsRelative() const
 {
-    return _points;
+    QVector<WirePoint> relativePoints(_points);
+
+    for (WirePoint& point : relativePoints) {
+        bool isJunction = point.isJunction();
+        point = point.toPointF() - pos();
+        point.setIsJunction(isJunction);
+    }
+
+    return relativePoints;
 }
 
 QVector<WirePoint> Wire::wirePointsAbsolute() const
 {
-    QVector<WirePoint> absolutePoints(_points);
-
-    for (WirePoint& point : absolutePoints) {
-        bool isJunction = point.isJunction();
-        point = point + pos();
-        point.setIsJunction(isJunction);
-    }
-
-    return absolutePoints;
+    return _points;
 }
 
 QVector<QPointF> Wire::pointsRelative() const
@@ -176,7 +176,7 @@ QVector<QPointF> Wire::pointsRelative() const
     QVector<QPointF> points;
 
     for (const WirePoint& point : _points) {
-        points << point.toPointF();
+        points << point.toPointF() - pos();
     }
 
     return points;
@@ -187,7 +187,7 @@ QVector<QPointF> Wire::pointsAbsolute() const
     QVector<QPointF> points;
 
     for (const WirePoint& point : _points) {
-        points << point + pos();
+        points << point.toPointF();
     }
 
     return points;
@@ -198,7 +198,7 @@ void Wire::calculateBoundingRect()
     // Find top-left most point
     const int& intMaxValue = std::numeric_limits<int>::max();
     QPointF topLeft(intMaxValue, intMaxValue);
-    for (auto& point : _points) {
+    for (auto& point : wirePointsRelative()) {
         if (point.x() < topLeft.x())
             topLeft.setX(point.x());
         if (point.y() < topLeft.y())
@@ -208,7 +208,7 @@ void Wire::calculateBoundingRect()
     // Find bottom-right most point
     const int& intMinValue = std::numeric_limits<int>::min();
     QPointF bottomRight(intMinValue, intMinValue);
-    for (auto& point : _points) {
+    for (auto& point : wirePointsRelative()) {
         if (point.x() > bottomRight.x())
             bottomRight.setX(point.x());
         if (point.y() > bottomRight.y())
@@ -224,22 +224,23 @@ void Wire::calculateBoundingRect()
 
 void Wire::updatePosition()
 {
-    QPointF topLeft = _rect.topLeft();
-    for (int i = 0; i < pointCount(); i++) {
-        _points[i].setX(_points[i].x() - topLeft.x());
-        _points[i].setY(_points[i].y() - topLeft.y());
-    }
-    // Move all the child items
-    for (auto& item : childItems()) {
-        item->setPos(item->pos() - topLeft);
-    }
-    QPointF newPos = pos() + topLeft;
-    QPointF snappedPos = _settings.snapToGrid(newPos);
-    _offset = newPos - snappedPos;
-    _internalMove = true;
-    setPos(newPos);
-    _internalMove = false;
-    calculateBoundingRect();
+// TODO: Not sure what has to be done here
+//    QPointF topLeft = _rect.topLeft();
+//    for (int i = 0; i < pointCount(); i++) {
+//        _points[i].setX(_points[i].x() - topLeft.x());
+//        _points[i].setY(_points[i].y() - topLeft.y());
+//    }
+//    // Move all the child items
+//    for (auto& item : childItems()) {
+//        item->setPos(item->pos() - topLeft);
+//    }
+//    QPointF newPos = pos() + topLeft;
+//    QPointF snappedPos = _settings.snapToGrid(newPos);
+//    _offset = newPos - snappedPos;
+//    _internalMove = true;
+//    setPos(newPos);
+//    _internalMove = false;
+//    calculateBoundingRect();
 }
 
 void Wire::setRenameAction(QAction* action)
@@ -250,7 +251,7 @@ void Wire::setRenameAction(QAction* action)
 void Wire::prependPoint(const QPointF& point)
 {
     prepareGeometryChange();
-    _points.prepend(WirePoint(point - pos()));
+    _points.prepend(WirePoint(point));
     calculateBoundingRect();
 
     // Update junction
@@ -260,13 +261,13 @@ void Wire::prependPoint(const QPointF& point)
     }
 
     emit pointInserted(0);
-    emit pointMoved(*this, _points.first());
+    emit pointMoved(*this, wirePointsRelative().first());
 }
 
 void Wire::appendPoint(const QPointF& point)
 {
     prepareGeometryChange();
-    _points.append(WirePoint(point - pos()));
+    _points.append(WirePoint(point));
     calculateBoundingRect();
 
     // Update junction
@@ -276,7 +277,7 @@ void Wire::appendPoint(const QPointF& point)
     }
 
     emit pointInserted(pointCount()-1);
-    emit pointMoved(*this, _points.last());
+    emit pointMoved(*this, wirePointsRelative().last());
 }
 
 void Wire::insertPoint(int index, const QPointF& point)
@@ -303,11 +304,11 @@ void Wire::insertPoint(int index, const QPointF& point)
     }
 
     prepareGeometryChange();
-    _points.insert(index, WirePoint(_settings.snapToGrid(point - pos())));
+    _points.insert(index, WirePoint(_settings.snapToGrid(point)));
     calculateBoundingRect();
 
     emit pointInserted(index);
-    emit pointMoved(*this, _points[index]);
+    emit pointMoved(*this, wirePointsRelative()[index]);
 }
 
 void Wire::removeFirstPoint()
@@ -369,8 +370,8 @@ void Wire::removeDuplicatePoints()
 {
     int i = 0;
     while (i < pointCount()-1 and pointCount() > 2) {
-        WirePoint p1 = _points.at(i);
-        WirePoint p2 = _points.at(i+1);
+        WirePoint p1 = wirePointsRelative().at(i);
+        WirePoint p2 = wirePointsRelative().at(i+1);
 
         // Check if p2 is the same as p1
         if (p1 == p2) {
@@ -568,8 +569,8 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
             WirePoint point = wire->wirePointsAbsolute().at(jIndex);
-            if ((_points[index] + pos()).toPoint() == point.toPoint()) {
-                wire->movePointBy(jIndex, QVector2D(moveTo - (_points[index] + pos())));
+            if ((_points[index]).toPoint() == point.toPoint()) {
+                wire->movePointBy(jIndex, QVector2D(moveTo - _points[index].toPointF()));
             }
         }
     }
@@ -589,11 +590,11 @@ void Wire::movePointTo(int index, const QPointF& moveTo)
     }
 
     prepareGeometryChange();
-    WirePoint wirepoint = (moveTo - pos());
+    WirePoint wirepoint = moveTo;
     wirepoint.setIsJunction(_points[index].isJunction());
     _points[index] = wirepoint;
 
-    emit pointMoved(*this, _points[index]);
+    emit pointMoved(*this, wirePointsRelative()[index]);
     calculateBoundingRect();
     update();
 }
@@ -703,13 +704,13 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
         if (isConnected) {
             if (index == 0) {
                 // Add a point
-                prependPoint(_points.first().toPointF() + pos());
+                prependPoint(_points.first().toPointF());
                 // Increment indices to account for inserted point
                 index++;
                 _lineSegmentToMoveIndex++;
             } else {
                 // Add a point
-                appendPoint(_points.last().toPointF() + pos());
+                appendPoint(_points.last().toPointF());
             }
         }
     }
@@ -717,7 +718,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
     // Move the line segment
     // Move point 1
     {
-        const QPointF& newPos = _points[index] + pos() + moveBy.toPointF();
+        const QPointF& newPos = _points[index] + moveBy.toPointF();
         const std::shared_ptr<Wire>& wirePtr = this->sharedPtr<Wire>();
         auto cmd = new CommandWirepointMove(scene(), wirePtr, index, newPos);
         Q_ASSERT(scene());
@@ -725,7 +726,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
     }
     // Move point 2
     {
-        const QPointF& newPos = _points[index + 1] + pos() + moveBy.toPointF();
+        const QPointF& newPos = _points[index + 1] + moveBy.toPointF();
         const std::shared_ptr<Wire>& wirePtr = this->sharedPtr<Wire>();
         auto cmd = new CommandWirepointMove(scene(), wirePtr, index+1, newPos);
         scene()->undoStack()->push(cmd);
@@ -797,7 +798,7 @@ QList<Line> Wire::lineSegments() const
 
     QList<Line> ret;
     for (int i = 0; i < pointCount()-1; i++) {
-        ret.append(Line(pos() + _points.at(i).toPointF(), pos() + _points.at(i+1).toPointF()));
+        ret.append(Line(_points.at(i).toPointF(), _points.at(i+1).toPointF()));
     }
 
     return ret;

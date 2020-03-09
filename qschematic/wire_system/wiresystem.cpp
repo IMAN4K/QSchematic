@@ -60,7 +60,7 @@ void WireSystem::generateJunctions()
             }
             if (wire->pointIsOnWire(otherWire->wirePointsAbsolute().last().toPointF())) {
                 connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(otherWire->wirePointsAbsolute().count()-1, true);
+                otherWire->setPointIsJunction(otherWire->wirePointsAbsolute().count() - 1, true);
             }
         }
     }
@@ -274,7 +274,7 @@ void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
     }
 
     // Attach point to wire if needed
-    if (index == 0 or index == rawWire.wirePointsAbsolute().count()-1) {
+    if (index == 0 or index == rawWire.wirePointsAbsolute().count() - 1) {
         for (const auto& wire: wires()) {
             // Skip current wire
             if (wire.get() == &rawWire) {
