@@ -175,11 +175,11 @@ QVector<std::shared_ptr<Wire>> WireSystem::wiresConnectedTo(const std::shared_pt
 
             // If they are connected to one of the wire in the list add them to the new list
             for (const auto& wire2 : connectedWires) {
-                if (wire2->connectedWires().contains(otherWire.get())) {
+                if (wire2->connected_wires().contains(otherWire.get())) {
                     newList << otherWire;
                     break;
                 }
-                if (otherWire->connectedWires().contains(wire2.get())) {
+                if (otherWire->connected_wires().contains(wire2.get())) {
                     newList << otherWire;
                     break;
                 }
@@ -248,7 +248,7 @@ void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
                     continue;
                 }
                 // If is connected
-                if (wire->connectedWires().contains(&rawWire)) {
+                if (wire->connected_wires().contains(&rawWire)) {
                     bool shouldDisconnect = true;
                     // Keep the wires connected if there is another junction
                     for (const auto& jIndex : rawWire.junctions()) {
@@ -281,7 +281,7 @@ void WireSystem::wirePointMovedByUser(Wire& rawWire, int index)
                 continue;
             }
             if (wire->pointIsOnWire(rawWire.wirePointsAbsolute().at(index).toPointF())) {
-                if (not rawWire.connectedWires().contains(wire.get())) {
+                if (not rawWire.connected_wires().contains(wire.get())) {
                     rawWire.setPointIsJunction(index, true);
                     auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
                     connectWire(wire, rawWirePtr);

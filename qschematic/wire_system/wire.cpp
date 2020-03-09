@@ -20,3 +20,8 @@ QVector<int> wire::junctions() const
     }
     return indexes;
 }
+
+QList<Wire*> wire::connected_wires()
+{
+    return _connectedWires;
+}

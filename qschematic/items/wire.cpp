@@ -341,7 +341,7 @@ void Wire::removePoint(int index)
         moveJunctionsToNewSegment(lineSegments().at(index - 1), newSegment);
         moveJunctionsToNewSegment(lineSegments().at(index), newSegment);
     } else {
-        for (const auto& wire: connectedWires()) {
+        for (const auto& wire: connected_wires()) {
             for (int junctionIndex: wire->junctions()) {
                 QPointF point = wire->pointsAbsolute().at(junctionIndex);
                 if (lineSegments().first().containsPoint(point)) {
@@ -764,11 +764,6 @@ bool Wire::connectWire(Wire* wire)
     return true;
 }
 
-QList<Wire*> Wire::connectedWires()
-{
-    return _connectedWires;
-}
-
 void Wire::disconnectWire(Wire* wire)
 {
     _connectedWires.removeAll(wire);
@@ -1041,7 +1036,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
             for (const auto& index : junctions()) {
                 const auto& junction = wirePointsAbsolute().at(index);
                 for (const auto& wire : scene()->wireSystem()->wires()) {
-                    if (not wire->connectedWires().contains(this)) {
+                    if (not wire->connected_wires().contains(this)) {
                         continue;
                     }
                     if (wire->pointIsOnWire(junction.toPointF()) and not movedBy.isNull()) {
@@ -1050,7 +1045,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                 }
             }
             // Move junction on the wire
-            for (const auto& wire : connectedWires()) {
+            for (const auto& wire : connected_wires()) {
                 for (const auto& index : wire->junctions()) {
                     const auto& point = wire->wirePointsAbsolute().at(index);
                     if (pointIsOnWire(point.toPointF())) {

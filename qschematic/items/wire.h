@@ -49,7 +49,6 @@ namespace QSchematic {
         void setPointIsJunction(int index, bool isJunction);
         bool pointIsOnWire(const QPointF& point) const;
         bool connectWire(Wire* wire);
-        QList<Wire*> connectedWires();
         void disconnectWire(Wire* wire);
         void setNet(const std::shared_ptr<WireNet>& wirenet);
         std::shared_ptr<WireNet> net();

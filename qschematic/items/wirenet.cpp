@@ -94,7 +94,7 @@ bool WireNet::addWire(const std::shared_ptr<Wire>& wire)
     }
 
     // Update the junctions of the wires that are already in the net
-    for (const auto& otherWire : wire->connectedWires()) {
+    for (const auto& otherWire : wire->connected_wires()) {
         for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
             // Ignore if it's not the first/last point
             if (index != 0 and index != otherWire->pointsAbsolute().count() - 1) {

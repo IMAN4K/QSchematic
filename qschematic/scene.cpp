@@ -1152,7 +1152,7 @@ void Scene::removeUnconnectedWires()
 
     for (const auto& wire : _wireSystem->wires()) {
         // If it has wires attached to it, go to the next wire
-        if (wire->connectedWires().count() > 0) {
+        if (wire->connected_wires().count() > 0) {
             continue;
         }
 
@@ -1160,7 +1160,7 @@ void Scene::removeUnconnectedWires()
 
         // Check if it is connected to a wire
         for (const auto& otherWire : _wireSystem->wires()) {
-            if (otherWire->connectedWires().contains(wire.get())) {
+            if (otherWire->connected_wires().contains(wire.get())) {
                 isConnected = true;
                 break;
             }
