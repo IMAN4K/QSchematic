@@ -5,6 +5,7 @@
 #include "wirepoint.h"
 #include "wirenet.h"
 #include "line.h"
+#include "wire_system/wire.h"
 
 class QVector2D;
 
@@ -16,7 +17,7 @@ namespace QSchematic {
      * IMPORTANT NOTE: The points coordinates are RELATIVE and in SCENE COORDINATES.
      *                 Wires must be movable so we can move entire groups of stuff.
      */
-    class Wire : public Item
+    class Wire : public Item, public wire_system::wire
     {
         Q_OBJECT
 
@@ -86,7 +87,6 @@ namespace QSchematic {
         void removeDuplicatePoints();
         void removeObsoletePoints();
 
-        QVector<WirePoint> _points;
         QList<Wire*> _connectedWires;
         QRectF _rect;
         int _pointToMoveIndex;
