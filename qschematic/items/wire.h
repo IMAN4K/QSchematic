@@ -87,7 +87,6 @@ namespace QSchematic {
         void removeDuplicatePoints();
         void removeObsoletePoints();
 
-        QList<Wire*> _connectedWires;
         QRectF _rect;
         int _pointToMoveIndex;
         int _lineSegmentToMoveIndex;
