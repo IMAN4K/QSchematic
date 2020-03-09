@@ -5,7 +5,6 @@
 #include "wirepoint.h"
 #include "wirenet.h"
 #include "line.h"
-#include "wire_system/wiredata.h"
 
 class QVector2D;
 
@@ -56,13 +55,11 @@ namespace QSchematic {
         std::shared_ptr<WireNet> net();
         bool movingWirePoint() const;
         void updatePosition();
-        void appendPoint(const WirePoint& point);
-        void prependPoint(const WirePoint& point);
 
         QList<QSchematic::Line> lineSegments() const;
 
     signals:
-        void pointMoved(Wire& wire, const WirePoint& point);
+        void pointMoved(Wire& wire, WirePoint& point);
         void pointMovedByUser(Wire& wire, int index);
         void pointInserted(int index);
         void pointRemoved(int index);
@@ -89,6 +86,7 @@ namespace QSchematic {
         void removeDuplicatePoints();
         void removeObsoletePoints();
 
+        QVector<WirePoint> _points;
         QList<Wire*> _connectedWires;
         QRectF _rect;
         int _pointToMoveIndex;
@@ -99,7 +97,6 @@ namespace QSchematic {
         QAction* _renameAction;
         std::shared_ptr<WireNet> _net;
         bool _internalMove;
-        WireData _data;
     };
 
 }
