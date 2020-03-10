@@ -28,6 +28,8 @@ namespace wire_system
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
+        virtual void about_to_change();
+        virtual void has_changed();
 
         wire_manager* m_manager;
         QVector<WirePoint> _points;

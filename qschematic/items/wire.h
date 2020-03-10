@@ -74,6 +74,8 @@ namespace QSchematic {
         virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
         void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
         virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override;
+        void about_to_change() override;
+        void has_changed() override;
 
     private:
         Q_DISABLE_COPY(Wire)

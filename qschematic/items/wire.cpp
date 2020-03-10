@@ -1103,3 +1103,13 @@ bool Wire::movingWirePoint() const
         return false;
     }
 }
+
+void Wire::about_to_change()
+{
+    prepareGeometryChange();
+}
+
+void Wire::has_changed()
+{
+    calculateBoundingRect();
+}

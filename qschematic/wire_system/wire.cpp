@@ -146,3 +146,21 @@ void wire::move_point_to(int index, const QPointF& moveTo)
     wirepoint.setIsJunction(_points[index].isJunction());
     _points[index] = wirepoint;
 }
+
+/**
+ * Is executed when the shape of the wire is about to change. This method can be
+ * overridden by subclasses to prepare for such changes.
+ */
+void wire::about_to_change()
+{
+
+}
+
+/**
+ * Is executed when the shape of the wire has changed. This method can be
+ * overridden by subclasses to react to such changes.
+ */
+void wire::has_changed()
+{
+
+}
