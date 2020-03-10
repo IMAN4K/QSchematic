@@ -2,7 +2,6 @@
 
 #include <QList>
 #include "items/wirepoint.h"
-#include "wiresystem.h"
 
 namespace QSchematic {
     class Wire;
@@ -12,6 +11,8 @@ using namespace QSchematic; // TODO: Needs to be removed
 
 namespace wire_system
 {
+    class wire_manager;
+
     class wire
     {
 

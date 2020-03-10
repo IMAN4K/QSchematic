@@ -10,6 +10,8 @@ namespace QSchematic
     class Connector;
 }
 
+using namespace QSchematic;
+
 namespace wire_system
 {
 

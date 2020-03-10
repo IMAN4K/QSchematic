@@ -2,6 +2,7 @@
 #include "wire.h"
 #include "items/wire.h" // TODO: This has to be removed
 #include <QVector2D>
+#include <QLineF>
 
 using namespace wire_system;
 
