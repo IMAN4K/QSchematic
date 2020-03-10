@@ -57,7 +57,6 @@ namespace QSchematic {
     signals:
         void pointMoved(Wire& wire, WirePoint& point);
         void pointMovedByUser(Wire& wire, int index);
-        void pointInserted(int index);
         void pointRemoved(int index);
         void toggleLabelRequested();
 

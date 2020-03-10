@@ -255,7 +255,7 @@ void Wire::prependPoint(const QPointF& point)
         setPointIsJunction(1, false);
     }
 
-    emit pointInserted(0);
+    m_manager->pointInserted(this->sharedPtr<Wire>(), 0);
     emit pointMoved(*this, wirePointsRelative().first());
 }
 
@@ -271,7 +271,7 @@ void Wire::appendPoint(const QPointF& point)
         setPointIsJunction(points_count() - 2, false);
     }
 
-    emit pointInserted(points_count() - 1);
+    m_manager->pointInserted(sharedPtr<Wire>(), points_count() - 1);
     emit pointMoved(*this, wirePointsRelative().last());
 }
 
@@ -302,7 +302,7 @@ void Wire::insertPoint(int index, const QPointF& point)
     _points.insert(index, WirePoint(_settings.snapToGrid(point)));
     calculateBoundingRect();
 
-    emit pointInserted(index);
+    m_manager->pointInserted(sharedPtr<Wire>(), index);
     emit pointMoved(*this, wirePointsRelative()[index]);
 }
 
