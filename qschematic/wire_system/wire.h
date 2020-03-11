@@ -26,6 +26,7 @@ namespace wire_system
         QList<Line> line_segments() const;
         virtual void move_point_to(int index, const QPointF& moveTo);
         void set_point_is_junction(int index, bool isJunction);
+        virtual void prepend_point(const QPointF& point);
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);

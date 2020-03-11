@@ -1,5 +1,6 @@
 #include <items/line.h>
 #include "wire.h"
+#include "wiresystem.h"
 #include "items/wire.h" // TODO: This has to be removed
 #include <QVector2D>
 #include <QLineF>
@@ -174,4 +175,19 @@ void wire::set_point_is_junction(int index, bool isJunction)
     _points[index].setIsJunction(isJunction);
 
     has_changed(); // TODO: Make sure this correctly redraws the wire
+}
+
+void wire::prepend_point(const QPointF& point)
+{
+    about_to_change();
+    _points.prepend(WirePoint(point));
+    has_changed();
+
+    // Update junction
+    if (points_count() >= 2) {
+        set_point_is_junction(0, _points.at(1).isJunction());
+        set_point_is_junction(1, false);
+    }
+
+    m_manager->point_inserted(this, 0);
 }

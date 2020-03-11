@@ -243,19 +243,9 @@ void Wire::setRenameAction(QAction* action)
     _renameAction = action;
 }
 
-void Wire::prependPoint(const QPointF& point)
+void Wire::prepend_point(const QPointF& point)
 {
-    prepareGeometryChange();
-    _points.prepend(WirePoint(point));
-    calculateBoundingRect();
-
-    // Update junction
-    if (points_count() >= 2) {
-        set_point_is_junction(0, _points.at(1).isJunction());
-        set_point_is_junction(1, false);
-    }
-
-    m_manager->point_inserted(this, 0);
+    wire::prepend_point(point);
     emit pointMoved(*this, wirePointsRelative().first());
 }
 
@@ -617,7 +607,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
         if (isConnected) {
             if (index == 0) {
                 // Add a point
-                prependPoint(_points.first().toPointF());
+                prepend_point(_points.first().toPointF());
                 // Increment indices to account for inserted point
                 index++;
                 _lineSegmentToMoveIndex++;

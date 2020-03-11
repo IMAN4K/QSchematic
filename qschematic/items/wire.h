@@ -32,7 +32,7 @@ namespace QSchematic {
         virtual QRectF boundingRect() const override;
         virtual QPainterPath shape() const override;
 
-        void prependPoint(const QPointF& point);
+        void prepend_point(const QPointF& point) override;
         void appendPoint(const QPointF& point);
         void insertPoint(int index, const QPointF& point);        // Index of new point
         void removeFirstPoint();
