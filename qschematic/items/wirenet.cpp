@@ -102,7 +102,7 @@ bool WireNet::addWire(const std::shared_ptr<Wire>& wire)
             }
             // Mark the point as junction if it's on the wire
             if (wire->pointIsOnWire(otherWire->pointsAbsolute().at(index))) {
-                otherWire->setPointIsJunction(index, true);
+                otherWire->set_point_is_junction(index, true);
             }
         }
     }

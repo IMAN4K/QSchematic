@@ -251,8 +251,8 @@ void Wire::prependPoint(const QPointF& point)
 
     // Update junction
     if (points_count() >= 2) {
-        setPointIsJunction(0, _points.at(1).isJunction());
-        setPointIsJunction(1, false);
+        set_point_is_junction(0, _points.at(1).isJunction());
+        set_point_is_junction(1, false);
     }
 
     m_manager->pointInserted(this->sharedPtr<Wire>(), 0);
@@ -267,8 +267,8 @@ void Wire::appendPoint(const QPointF& point)
 
     // Update junction
     if (points_count() > 2) {
-        setPointIsJunction(points_count() - 1, _points.at(points_count() - 2).isJunction());
-        setPointIsJunction(points_count() - 2, false);
+        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).isJunction());
+        set_point_is_junction(points_count() - 2, false);
     }
 
     m_manager->pointInserted(sharedPtr<Wire>(), points_count() - 1);
@@ -372,7 +372,7 @@ void Wire::removeDuplicatePoints()
         if (p1 == p2) {
             // If p1 is not a junction itself then inherit from p2
             if (!p1.isJunction()) {
-                setPointIsJunction(i, p2.isJunction());
+                set_point_is_junction(i, p2.isJunction());
             }
             emit pointRemoved(i+1);
             _points.removeAt(i+1);
@@ -644,17 +644,6 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
         auto cmd = new CommandWirepointMove(scene(), wirePtr, index+1, newPos);
         scene()->undoStack()->push(cmd);
     }
-}
-
-void Wire::setPointIsJunction(int index, bool isJunction)
-{
-    if (index < 0 or index > points_count() - 1) {
-        return;
-    }
-
-    _points[index].setIsJunction(isJunction);
-
-    update();
 }
 
 bool Wire::pointIsOnWire(const QPointF& point) const

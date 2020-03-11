@@ -57,11 +57,11 @@ void wire_manager::generateJunctions()
             }
             if (wire->pointIsOnWire(otherWire->points().first().toPointF())) {
                 connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(0, true);
+                otherWire->set_point_is_junction(0, true);
             }
             if (wire->pointIsOnWire(otherWire->points().last().toPointF())) {
                 connectWire(wire, otherWire);
-                otherWire->setPointIsJunction(otherWire->points().count() - 1, true);
+                otherWire->set_point_is_junction(otherWire->points().count() - 1, true);
             }
         }
     }
@@ -126,7 +126,7 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
                     continue;
                 }
                 if (wire->pointIsOnWire(point.toPointF())) {
-                    otherWire->setPointIsJunction(index, false);
+                    otherWire->set_point_is_junction(index, false);
                 }
             }
         }
@@ -268,7 +268,7 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
                         auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
                         disconnectWire(wire, rawWirePtr);
                     }
-                    rawWire.setPointIsJunction(index, false);
+                    rawWire.set_point_is_junction(index, false);
                 }
             }
         }
@@ -283,7 +283,7 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
             }
             if (wire->pointIsOnWire(rawWire.points().at(index).toPointF())) {
                 if (not rawWire.connected_wires().contains(wire.get())) {
-                    rawWire.setPointIsJunction(index, true);
+                    rawWire.set_point_is_junction(index, true);
                     auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
                     connectWire(wire, rawWirePtr);
                 }

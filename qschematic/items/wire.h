@@ -45,7 +45,6 @@ namespace QSchematic {
         void movePointBy(int index, const QVector2D& moveBy);
         void move_point_to(int index, const QPointF& moveTo) override;
         void moveLineSegmentBy(int index, const QVector2D& moveBy);
-        void setPointIsJunction(int index, bool isJunction);
         bool pointIsOnWire(const QPointF& point) const;
         bool connectWire(Wire* wire);
         void disconnectWire(Wire* wire);

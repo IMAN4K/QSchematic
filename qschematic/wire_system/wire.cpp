@@ -164,3 +164,14 @@ void wire::has_changed()
 {
 
 }
+
+void wire::set_point_is_junction(int index, bool isJunction)
+{
+    if (index < 0 or index > points_count() - 1) {
+        return;
+    }
+
+    _points[index].setIsJunction(isJunction);
+
+    has_changed(); // TODO: Make sure this correctly redraws the wire
+}
