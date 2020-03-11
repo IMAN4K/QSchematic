@@ -390,12 +390,12 @@ void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, cons
     }
 }
 
-void wire_manager::pointInserted(const std::shared_ptr<Wire>& wire, int index)
+void wire_manager::point_inserted(const wire* wire, int index)
 {
     for (const auto& connector : _connections.keys()) {
         // Skip if it's not the connected to the wire
         auto wirePoint = _connections.value(connector);
-        if (_connections.value(connector).first != wire) {
+        if (_connections.value(connector).first.get() != wire) {
             continue;
         }
         // Do nothing if the connected point is the first
@@ -403,7 +403,7 @@ void wire_manager::pointInserted(const std::shared_ptr<Wire>& wire, int index)
             continue;
         }
         // Inserted point comes before the connected point or the last point is connected
-        else if (wirePoint.second >= index or wirePoint.second == wire->pointsAbsolute().count()-2) {
+        else if (wirePoint.second >= index or wirePoint.second == wire->points_count() - 2) {
             wirePoint.second++;
         }
         // Update the connection

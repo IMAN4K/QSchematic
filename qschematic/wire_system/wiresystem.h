@@ -37,7 +37,7 @@ public:
     int attachedWirepoint(const std::shared_ptr<Connector>& connector);
     void detachWire(const std::shared_ptr<Connector>& connector);
     std::shared_ptr<Wire> wireWithExtremityAt(const QPointF& point);
-    void pointInserted(const std::shared_ptr<Wire>& wire, int index);
+    void point_inserted(const wire* wire, int index);
 
 signals:
     void wirePointMoved(Wire& wire, int index);
