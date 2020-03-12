@@ -463,3 +463,39 @@ bool wire::point_is_on_wire(const QPointF& point) const
 
     return false;
 }
+
+void wire::move(const QVector2D& movedBy)
+{
+    // Ignore if it shouldn't move
+    if (movedBy.isNull()) {
+        return;
+    }
+
+    // Move junctions
+    for (const auto& index : junctions()) {
+        const auto& junction = points().at(index);
+        for (const auto& wire : m_manager->wires()) {
+            if (not wire->connected_wires().contains(this)) {
+                continue;
+            }
+            if (wire->point_is_on_wire(junction.toPointF()) and not movedBy.isNull()) {
+                move_point_by(index, -movedBy);
+            }
+        }
+    }
+
+    // Move junction on the wire
+    for (const auto& wire : connected_wires()) {
+        for (const auto& index : wire->junctions()) {
+            const auto& point = wire->points().at(index);
+            if (point_is_on_wire(point.toPointF())) {
+                wire->move_point_by(index, movedBy);
+            }
+        }
+    }
+
+    // Move the points
+    for (int index = 0; index < points_count(); index++) {
+        move_point_to(index, _points[index].toPointF() + movedBy.toPointF());
+    }
+}

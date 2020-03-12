@@ -631,29 +631,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
         // Move the wire
         QPointF newPos = QPointF(_settings.snapToGrid(value.toPointF())) + _offset;
         QVector2D movedBy = QVector2D(newPos - pos());
-        // Move junctions
-        if (not movedBy.isNull() and not _internalMove and scene()) {
-            for (const auto& index : junctions()) {
-                const auto& junction = points().at(index);
-                for (const auto& wire : scene()->wireSystem()->wires()) {
-                    if (not wire->connected_wires().contains(this)) {
-                        continue;
-                    }
-                    if (wire->point_is_on_wire(junction.toPointF()) and not movedBy.isNull()) {
-                        move_point_by(index, -movedBy);
-                    }
-                }
-            }
-            // Move junction on the wire
-            for (const auto& wire : connected_wires()) {
-                for (const auto& index : wire->junctions()) {
-                    const auto& point = wire->points().at(index);
-                    if (point_is_on_wire(point.toPointF())) {
-                        wire->move_point_by(index, movedBy);
-                    }
-                }
-            }
-        }
+        move(movedBy);
         return newPos;
     }
     case ItemPositionHasChanged:
