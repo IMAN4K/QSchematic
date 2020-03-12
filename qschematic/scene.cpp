@@ -156,6 +156,9 @@ void Scene::setSettings(const Settings& settings)
         item->setSettings(settings);
     }
 
+    // Update settings of the wire manager
+    _wireSystem->set_settings(settings);
+
     // Store new settings
     _settings = settings;
 

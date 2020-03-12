@@ -528,3 +528,13 @@ bool wire_manager::wire_point_is_attached(wire_system::wire* wire, int index)
     }
     return false;
 }
+
+void wire_manager::set_settings(const Settings& settings)
+{
+    _settings = settings;
+}
+
+Settings wire_manager::settings() const
+{
+    return _settings;
+}
