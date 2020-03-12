@@ -66,7 +66,7 @@ void CommandItemRemove::redo()
     // Is this a wire?
     auto wire = std::dynamic_pointer_cast<Wire>(_item);
     if (wire) {
-        _scene->wireSystem()->removeWire(wire);
+        _scene->removeWire(wire);
     }
 
     // Otherwise, fall back to normal item behavior
