@@ -64,7 +64,7 @@ void CommandItemAdd::redo()
             _scene->addWire(wire);
         }
         for (int i = 0; i < wire->wirePointsRelative().count(); i++) {
-            wire->net()->pointMovedByUser(*wire.get(), i);
+            _scene->wireSystem()->wirePointMovedByUser(*wire.get(), i);
         }
     }
 

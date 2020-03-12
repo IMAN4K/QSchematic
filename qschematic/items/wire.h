@@ -42,15 +42,11 @@ namespace QSchematic {
         QVector<QPointF> pointsRelative() const;
         QVector<QPointF> pointsAbsolute() const;
         void move_point_to(int index, const QPointF& moveTo) override;
-        void disconnectWire(Wire* wire);
-        void setNet(const std::shared_ptr<WireNet>& wirenet);
-        std::shared_ptr<WireNet> net();
         bool movingWirePoint() const;
         void updatePosition();
 
     signals:
         void pointMoved(Wire& wire, point& point);
-        void pointMovedByUser(Wire& wire, int index);
         void toggleLabelRequested();
 
     protected:
@@ -80,7 +76,6 @@ namespace QSchematic {
         QPointF _prevMousePos;
         QPointF _offset;
         QAction* _renameAction;
-        std::shared_ptr<WireNet> _net;
         bool _internalMove;
     };
 

@@ -64,6 +64,7 @@ namespace QSchematic {
         void removeUnconnectedWires();
         bool addWire(const std::shared_ptr<Wire>& wire);
         bool removeWire(const std::shared_ptr<Wire>& wire);
+        QList<std::shared_ptr<WireNet>> nets(const std::shared_ptr<net> wireNet) const;
 
         void undo();
         void redo();
@@ -134,7 +135,7 @@ namespace QSchematic {
 
     private slots:
         void updateNodeConnections(const Node* node) const;
-        void wirePointMoved(Wire& wire, int index);
+        void wirePointMoved(wire& rawWire, int index);
     };
 
 }

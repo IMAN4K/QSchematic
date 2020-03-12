@@ -1,5 +1,6 @@
 #include <items/line.h>
 #include "wire.h"
+#include "net.h"
 #include "wiresystem.h"
 #include <QVector2D>
 #include <QLineF>
@@ -560,3 +561,19 @@ bool wire::connect_wire(wire* wire)
     _connectedWires.append(wire);
     return true;
 }
+
+void wire::setNet(const std::shared_ptr<wire_system::net>& net)
+{
+    _net = net;
+}
+
+std::shared_ptr<wire_system::net> wire::net()
+{
+    return _net;
+}
+
+void wire::disconnectWire(wire* wire)
+{
+    _connectedWires.removeAll(wire);
+}
+

@@ -2,6 +2,7 @@
 
 #include <QList>
 #include <QVector2D>
+#include <memory>
 #include "point.h"
 
 using namespace QSchematic; // TODO: Needs to be removed
@@ -9,8 +10,9 @@ using namespace QSchematic; // TODO: Needs to be removed
 namespace wire_system
 {
     class wire_manager;
+    class net;
 
-    class wire
+    class wire : public std::enable_shared_from_this<wire>
     {
 
     public:
@@ -31,6 +33,9 @@ namespace wire_system
         void move(const QVector2D& movedBy);
         void simplify();
         bool connect_wire(wire* wire);
+        void setNet(const std::shared_ptr<wire_system::net>& net);
+        std::shared_ptr<wire_system::net> net();
+        void disconnectWire(wire* wire);
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
@@ -42,6 +47,7 @@ namespace wire_system
         wire_manager* m_manager;
         QVector<point> _points;
         QList<wire*> _connectedWires;
+        std::shared_ptr<wire_system::net> _net;
 
     private:
         void remove_duplicate_points();

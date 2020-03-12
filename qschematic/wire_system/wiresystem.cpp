@@ -9,16 +9,14 @@ wire_manager::wire_manager()
 {
 }
 
-void wire_manager::addWireNet(const std::shared_ptr<WireNet> wireNet)
+void wire_manager::addWireNet(const std::shared_ptr<net> wireNet)
 {
     // Sanity check
     if (!wireNet) {
         return;
     }
 
-    // Setup
-    connect(wireNet.get(), &WireNet::pointMovedByUser, this, &wire_manager::wirePointMovedByUser);
-    connect(wireNet.get(), &WireNet::highlightChanged, this, &wire_manager::wireNetHighlightChanged);
+    wireNet->set_manager(this);
 
     // Keep track of stuff
     _nets.append(wireNet);
@@ -27,7 +25,7 @@ void wire_manager::addWireNet(const std::shared_ptr<WireNet> wireNet)
 /**
  * Returns a list of all the nets
  */
-QList<std::shared_ptr<WireNet>> wire_manager::nets() const
+QList<std::shared_ptr<net>> wire_manager::nets() const
 {
     return _nets;
 }
@@ -35,9 +33,9 @@ QList<std::shared_ptr<WireNet>> wire_manager::nets() const
 /**
  * Returns a list of all the wires
  */
-QList<std::shared_ptr<Wire>> wire_manager::wires() const
+QList<std::shared_ptr<wire>> wire_manager::wires() const
 {
-    QList<std::shared_ptr<Wire>> list;
+    QList<std::shared_ptr<wire>> list;
 
     for (const auto& wireNet : _nets) {
         for (const auto& wire : wireNet->wires()) {
@@ -56,11 +54,11 @@ void wire_manager::generateJunctions()
                 continue;
             }
             if (wire->point_is_on_wire(otherWire->points().first().toPointF())) {
-                connectWire(wire, otherWire);
+                connectWire(wire.get(), otherWire.get());
                 otherWire->set_point_is_junction(0, true);
             }
             if (wire->point_is_on_wire(otherWire->points().last().toPointF())) {
-                connectWire(wire, otherWire);
+                connectWire(wire.get(), otherWire.get());
                 otherWire->set_point_is_junction(otherWire->points().count() - 1, true);
             }
         }
@@ -72,13 +70,13 @@ void wire_manager::generateJunctions()
  * @param wire The wire to connect to
  * @param rawWire The wire to connect
  */
-void wire_manager::connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire)
+void wire_manager::connectWire(wire* wire, wire_system::wire* rawWire)
 {
-    if (not wire->connect_wire(rawWire.get())) {
+    if (not wire->connect_wire(rawWire)) {
         return;
     }
-    std::shared_ptr<WireNet> net = wire->net();
-    std::shared_ptr<WireNet> otherNet = rawWire->net();
+    std::shared_ptr<wire_system::net> net = wire->net();
+    std::shared_ptr<wire_system::net> otherNet = rawWire->net();
     if (mergeNets(net, otherNet)) {
         removeWireNet(otherNet);
     }
@@ -90,7 +88,7 @@ void wire_manager::connectWire(const std::shared_ptr<Wire>& wire, std::shared_pt
  * \param otherNet The net to merge into the other one
  * \return Whether the two nets where merged successfully or not
  */
-bool wire_manager::mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<WireNet>& otherNet)
+bool wire_manager::mergeNets(std::shared_ptr<net>& net, std::shared_ptr<wire_system::net>& otherNet)
 {
     // Ignore if it's the same net
     if (net == otherNet) {
@@ -103,7 +101,7 @@ bool wire_manager::mergeNets(std::shared_ptr<WireNet>& net, std::shared_ptr<Wire
     return true;
 }
 
-void wire_manager::removeWireNet(std::shared_ptr<WireNet> net)
+void wire_manager::removeWireNet(std::shared_ptr<net> net)
 {
     _nets.removeAll(net);
 }
@@ -113,7 +111,7 @@ void wire_manager::clear()
     _nets.clear();
 }
 
-bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
+bool wire_manager::removeWire(const std::shared_ptr<wire> wire)
 {
     // Detach from all connectors
     detach_wire_from_all(wire);
@@ -121,9 +119,9 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
     // Disconnect from connected wires
     for (const auto& otherWire: wiresConnectedTo(wire)) {
         if (otherWire != wire) {
-            disconnectWire(otherWire, wire);
+            disconnectWire(otherWire, wire.get());
             // Update the junction on the other wire
-            for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
+            for (int index = 0; index < otherWire->points_count(); index++) {
                 const auto point = otherWire->points().at(index);
                 if (not point.is_junction()) {
                     continue;
@@ -136,7 +134,7 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
     }
 
     // Remove the wire from the list
-    QList<std::shared_ptr<WireNet>> netsToDelete;
+    QList<std::shared_ptr<net>> netsToDelete;
     for (auto& net : _nets) {
         if (net->contains(wire)) {
             net->removeWire(wire);
@@ -160,14 +158,14 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
  * Generates a list of all the wires connected to a certain wire including the
  * wire itself.
  */
-QVector<std::shared_ptr<Wire>> wire_manager::wiresConnectedTo(const std::shared_ptr<Wire>& wire) const
+QVector<std::shared_ptr<wire>> wire_manager::wiresConnectedTo(const std::shared_ptr<wire>& wire) const
 {
-    QVector<std::shared_ptr<Wire>> connectedWires;
+    QVector<std::shared_ptr<wire_system::wire>> connectedWires;
 
     // Add the wire itself to the list
     connectedWires.push_back(wire);
 
-    QVector<std::shared_ptr<Wire>> newList;
+    QVector<std::shared_ptr<wire_system::wire>> newList;
     do {
         newList.clear();
         // Go through all the wires in the net
@@ -201,17 +199,17 @@ QVector<std::shared_ptr<Wire>> wire_manager::wiresConnectedTo(const std::shared_
  * \param wire The wire that the other is attached to
  * \param otherWire The wire that is being disconnected
  */
-void wire_manager::disconnectWire(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Wire>& otherWire)
+void wire_manager::disconnectWire(const std::shared_ptr<wire_system::wire>& wire, wire_system::wire* otherWire)
 {
-    wire->disconnectWire(otherWire.get());
+    wire->disconnectWire(otherWire);
     auto net = otherWire->net();
     // Create a list of wires that will stay in the old net
-    QVector<std::shared_ptr<Wire>> oldWires = wiresConnectedTo(wire);
+    QVector<std::shared_ptr<wire_system::wire>> oldWires = wiresConnectedTo(wire);
     // If there are wires that are not in the list create a new net
     if (net->wires().count() != oldWires.count()) {
         // Create new net and add the wire
         auto newNet = std::make_shared<WireNet>();
-        addWireNet(newNet);
+        addWireNet(std::static_pointer_cast<wire_system::net>(newNet));
         for (auto wireToMove: net->wires()) {
             if (oldWires.contains(wireToMove)) {
                 continue;
@@ -222,7 +220,7 @@ void wire_manager::disconnectWire(const std::shared_ptr<Wire>& wire, const std::
     }
 }
 
-bool wire_manager::addWire(const std::shared_ptr<Wire>& wire)
+bool wire_manager::addWire(const std::shared_ptr<wire>& wire)
 {
     // Sanity check
     if (!wire) {
@@ -232,19 +230,19 @@ bool wire_manager::addWire(const std::shared_ptr<Wire>& wire)
     // No point of the new wire lies on an existing line segment - create a new wire net
     auto newNet = std::make_shared<WireNet>();
     newNet->addWire(wire);
-    addWireNet(newNet);
+    addWireNet(std::static_pointer_cast<wire_system::net>(newNet));
 
     return true;
 }
 
-void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
+void wire_manager::wirePointMovedByUser(wire& rawWire, int index)
 {
-    point point = rawWire.wirePointsRelative().at(index);
+    point point = rawWire.points().at(index);
 
     emit wirePointMoved(rawWire, index);
 
     // Detach wires
-    if (index == 0 or index == rawWire.pointsAbsolute().count()-1){
+    if (index == 0 or index == rawWire.points_count() - 1){
         if (point.is_junction()) {
             for (const auto& wire: wires()) {
                 // Skip current wire
@@ -268,8 +266,7 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
                         }
                     }
                     if (shouldDisconnect) {
-                        auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
-                        disconnectWire(wire, rawWirePtr);
+                        disconnectWire(wire, &rawWire);
                     }
                     rawWire.set_point_is_junction(index, false);
                 }
@@ -287,65 +284,11 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
             if (wire->point_is_on_wire(rawWire.points().at(index).toPointF())) {
                 if (not rawWire.connected_wires().contains(wire.get())) {
                     rawWire.set_point_is_junction(index, true);
-                    auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());
-                    connectWire(wire, rawWirePtr);
+                    connectWire(wire.get(), &rawWire);
                 }
             }
         }
     }
-}
-
-void wire_manager::wireNetHighlightChanged(bool highlighted)
-{
-    auto rawPointer = qobject_cast<WireNet*>(sender());
-    if (!rawPointer) {
-        return;
-    }
-    std::shared_ptr<WireNet> wireNet;
-    for (auto& wn : _nets) {
-        if (wn.get() == rawPointer) {
-            wireNet = wn;
-            break;
-        }
-    }
-    if (!wireNet) {
-        return;
-    }
-
-    // Highlight all wire nets that are part of this net
-    for (auto& otherWireNet : nets(wireNet)) {
-        if (otherWireNet == wireNet) {
-            continue;
-        }
-
-        otherWireNet->blockSignals(true);
-        otherWireNet->setHighlighted(highlighted);
-        otherWireNet->blockSignals(false);
-    }
-}
-
-/**
- * Returns a list of all the nets that are in the same global net as the given net
- */
-QList<std::shared_ptr<WireNet>> wire_manager::nets(const std::shared_ptr<WireNet> wireNet) const
-{
-    QList<std::shared_ptr<WireNet>> list;
-
-    for (auto& net : _nets) {
-        if (!net) {
-            continue;
-        }
-
-        if (net->name().isEmpty()) {
-            continue;
-        }
-
-        if (QString::compare(net->name(), wireNet->name(), Qt::CaseInsensitive) == 0) {
-            list.append(net);
-        }
-    }
-
-    return list;
 }
 
 void wire_manager::attach_wire_to_connector(const std::shared_ptr<wire>& wire, int index, const std::shared_ptr<Connector>& connector)
@@ -441,7 +384,7 @@ void wire_manager::detachWire(const std::shared_ptr<Connector>& connector)
     _connections.remove(connector);
 }
 
-std::shared_ptr<Wire> wire_manager::wireWithExtremityAt(const QPointF& point)
+std::shared_ptr<wire> wire_manager::wireWithExtremityAt(const QPointF& point)
 {
     for (const auto& wire : wires()) {
         for (const auto& point : wire->points()) {

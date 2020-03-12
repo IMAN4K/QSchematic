@@ -17,7 +17,10 @@ FancyWire::FancyWire(QGraphicsItem* parent) :
     auto action = new QAction("Rename ...", this);
     connect(action, &QAction::triggered, this, [=] {
         QString name = QInputDialog::getText(nullptr, "Set WireNet name", "Enter the new name", QLineEdit::Normal, net()->name());
-        scene()->undoStack()->push(new QSchematic::CommandWirenetRename(net(), name));
+
+        if (auto wireNet = std::dynamic_pointer_cast<WireNet>(net())) {
+            scene()->undoStack()->push(new QSchematic::CommandWirenetRename(wireNet, name));
+        }
     });
     setRenameAction(action);
     setZValue(1);

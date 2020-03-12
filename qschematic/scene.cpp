@@ -75,7 +75,14 @@ gpds::container Scene::to_container() const
     // Nets
     gpds::container netsList;
     for (const auto& net : _wireSystem->nets()) {
-        netsList.add_value("net", net->to_container());
+
+        // Make sure it's a WireNet
+        auto wire_net = std::dynamic_pointer_cast<WireNet>(net);
+        if (not wire_net) {
+            continue;
+        }
+
+        netsList.add_value("net", wire_net->to_container());
     }
 
     // Root
@@ -535,7 +542,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
                     continue;
                 }
                 if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
-                    _wireSystem->connectWire(wire, _newWire);
+                    _wireSystem->connectWire(wire.get(), _newWire.get());
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                     wireAttached = true;
                     break;
@@ -566,7 +573,14 @@ void Scene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
         QGraphicsScene::mouseReleaseEvent(event);
 
         for (const auto& net : _wireSystem->nets()) {
-            net->updateLabelPos(true);
+
+            // Make sure it's a WireNet
+            auto wire_net = std::dynamic_pointer_cast<WireNet>(net);
+            if (not wire_net) {
+                continue;
+            }
+
+            wire_net->updateLabelPos(true);
         }
         // Reset the position for every selected item and
         // apply the translation through the undostack
@@ -685,7 +699,7 @@ void Scene::updateNodeConnections(const Node* node) const
     }
 }
 
-void Scene::wirePointMoved(Wire& rawWire, int index)
+void Scene::wirePointMoved(wire& rawWire, int index)
 {
     // Detach from connector
     for (const auto& node: nodes()) {
@@ -700,7 +714,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
             }
 
             if (_wireSystem->attachedWirepoint(connector) == index) {
-                if (connector->scenePos().toPoint() != rawWire.pointsAbsolute().at(index).toPoint()) {
+                if (connector->scenePos().toPoint() != rawWire.points().at(index).toPoint()) {
                     _wireSystem->detachWire(connector);
                 }
             }
@@ -712,7 +726,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
     for (const auto& node: nodes()) {
         for (const auto& connector: node->connectors()) {
             if (connector->scenePos().toPoint() == point.toPoint()) {
-                _wireSystem->attach_wire_to_connector(rawWire.sharedPtr<Wire>(), index, connector);
+                _wireSystem->attach_wire_to_connector(rawWire.shared_from_this(), index, connector);
             }
         }
     }
@@ -894,7 +908,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
                     continue;
                 }
                 if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
-                    _wireSystem->connectWire(wire, _newWire);
+                    _wireSystem->connectWire(wire.get(), _newWire.get());
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                 }
             }
@@ -1053,7 +1067,7 @@ void Scene::setupNewItem(Item& item)
 void Scene::generateConnections()
 {
     for (const auto& connector : connectors()) {
-        std::shared_ptr<Wire> wire = _wireSystem->wireWithExtremityAt(connector->scenePos());
+        std::shared_ptr<wire> wire = _wireSystem->wireWithExtremityAt(connector->scenePos());
         if (wire) {
             _wireSystem->attach_wire_to_connector(wire, connector);
         }
@@ -1190,7 +1204,9 @@ void Scene::removeUnconnectedWires()
         }
 
         // The wire has to be removed, add it to the list
-        wiresToRemove << wire;
+        if (auto wireItem = std::dynamic_pointer_cast<Wire>(wire)) {
+            wiresToRemove << wireItem;
+        }
     }
 
     // Remove the wires that have to be removed
@@ -1231,3 +1247,5 @@ bool Scene::removeWire(const std::shared_ptr<Wire>& wire)
 
     return _wireSystem->removeWire(wire);
 }
+
+

@@ -52,9 +52,11 @@ Wire::Wire(int type, QGraphicsItem* parent) :
 
 Wire::~Wire()
 {
-    // Make sure that we don't delete the net's label
-    if (childItems().contains(net()->label().get())) {
-        net()->label()->setParentItem(nullptr);
+    if (auto wire_net = std::dynamic_pointer_cast<WireNet>(net())) {
+        // Make sure that we don't delete the net's label
+        if (childItems().contains(wire_net->label().get())) {
+            wire_net->label()->setParentItem(nullptr);
+        }
     }
 }
 
@@ -316,11 +318,6 @@ void Wire::move_point_to(int index, const QPointF& moveTo)
     emit pointMoved(*this, wirePointsRelative()[index]);
     calculateBoundingRect();
     update();
-}
-
-void Wire::disconnectWire(Wire* wire)
-{
-    _connectedWires.removeAll(wire);
 }
 
 void Wire::mousePressEvent(QGraphicsSceneMouseEvent* event)
@@ -633,14 +630,22 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
     if (_renameAction) {
         menu.addAction(_renameAction);
     }
-    if (not net()->label()->text().isEmpty()) {
+
+    // If the net is a WireNet, retrieve the label
+    std::shared_ptr<Label> label;
+    if (auto wireNet = std::dynamic_pointer_cast<WireNet>(net())) {
+        label = wireNet->label();
+    }
+
+    // Show checkbox to toggle the visibility of the label
+    if (label and not net()->name().isEmpty()) {
         QAction* showAction = menu.addAction("Label visible");
         showAction->setCheckable(true);
-        showAction->setChecked(net()->label()->isVisible());
+        showAction->setChecked(label->isVisible());
 
         connect(showAction, &QAction::triggered, this, &Wire::toggleLabelRequested);
     }
-    bool labelWasVisible = net()->label()->isVisible();
+    bool labelWasVisible = label and label->isVisible();
     QAction* command = menu.exec(event->screenPos());
 
     // Add a point at the cursor
@@ -660,7 +665,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
     }
 
     // Move the label to the cursor if it was just made visible
-    if (not labelWasVisible and net()->label()->isVisible()) {
+    if (label and not labelWasVisible and label->isVisible()) {
         // Find line segment
         Line seg;
         QList<Line> lines = line_segments();
@@ -690,7 +695,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
         // When the wire is diagonal with a positive slope move it up and to the left
         else if ((angle > 0 and angle < 90) or (angle > 180 and angle < 360)) {
             QPointF point = Utils::pointOnLineClosestToPoint(seg.p1(), seg.p2(), pos);
-            pos.setX(point.x() - _settings.gridSize / 2 - net()->label()->textRect().width());
+            pos.setX(point.x() - _settings.gridSize / 2 - label->textRect().width());
             pos.setY(point.y() - _settings.gridSize / 2);
         }
         // When the wire is diagonal with a negative slope move it up and to the right
@@ -699,19 +704,9 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
             pos.setX(point.x() + _settings.gridSize / 2);
             pos.setY(point.y() - _settings.gridSize / 2);
         }
-        net()->label()->setParentItem(this);
-        net()->label()->setPos(pos - Wire::pos());
+        label->setParentItem(this);
+        label->setPos(pos - Wire::pos());
     }
-}
-
-std::shared_ptr<WireNet> Wire::net()
-{
-    return _net;
-}
-
-void Wire::setNet(const std::shared_ptr<WireNet>& wirenet)
-{
-    _net = wirenet;
 }
 
 bool Wire::movingWirePoint() const
