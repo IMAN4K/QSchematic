@@ -57,7 +57,7 @@ void WireNet::from_container(const gpds::container& container)
 {
     Q_ASSERT(_scene);
     // Root
-    setName(QString::fromStdString(container.get_value<std::string>("name").value_or("")));
+    set_name(QString::fromStdString(container.get_value<std::string>("name").value_or("")));
 
     // Label
     if (auto labelContainer = container.get_value<gpds::container*>("label").value_or(nullptr)) {
@@ -153,14 +153,9 @@ void WireNet::simplify()
     }
 }
 
-void WireNet::setName(const std::string& name)
+void WireNet::set_name(const QString& name)
 {
-    setName( QString::fromStdString( name ) );
-}
-
-void WireNet::setName(const QString& name)
-{
-    _name = name;
+    net::set_name(name);
 
     _label->setText(_name);
     _label->setVisible(!_name.isEmpty());
@@ -187,23 +182,6 @@ void WireNet::setHighlighted(bool highlighted)
 void WireNet::setScene(Scene* scene)
 {
     _scene = scene;
-}
-
-QString WireNet::name()const
-{
-    return _name;
-}
-
-QList<std::shared_ptr<Wire>> WireNet::wires() const
-{
-    QList<std::shared_ptr<Wire>> list;
-    for (const auto& wire: _wires) {
-        if (wire.expired()) {
-            qDebug() << "expired";
-        }
-        list.append(wire.lock());
-    }
-    return list;
 }
 
 QList<Line> WireNet::lineSegments() const

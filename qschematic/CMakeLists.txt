@@ -33,6 +33,7 @@ set(SOURCES_PRIVATE
     wire_system/wiresystem.cpp
     wire_system/wire.cpp
     wire_system/point.cpp
+    wire_system/net.cpp
     scene.cpp
     settings.cpp
     utils.cpp
@@ -69,6 +70,7 @@ set(HEADERS_PUBLIC
     wire_system/wiresystem.h
     wire_system/wire.h
     wire_system/point.h
+    wire_system/net.h
     netlist.h
     netlistgenerator.h
     scene.h

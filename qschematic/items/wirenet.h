@@ -5,6 +5,7 @@
 #include <QList>
 #include <gpds/serialize.hpp>
 #include "line.h"
+#include "../wire_system/net.h"
 
 namespace wire_system {
     class point;
@@ -19,7 +20,7 @@ namespace QSchematic {
     class Label;
     class Scene;
 
-    class WireNet : public QObject, public gpds::serialize, public std::enable_shared_from_this<WireNet>
+    class WireNet : public QObject, public gpds::serialize, public std::enable_shared_from_this<WireNet>, public wire_system::net
     {
         Q_OBJECT
         Q_DISABLE_COPY(WireNet)
@@ -35,15 +36,12 @@ namespace QSchematic {
         bool removeWire(const std::shared_ptr<Wire> wire);
         bool contains(const std::shared_ptr<Wire>& wire) const;
         void simplify();
-        void setName(const std::string& name);
-        void setName(const QString& name);
+        void set_name(const QString& name) override;
         void setHighlighted(bool highlighted);
         void setScene(Scene* scene);
         void updateLabelPos(bool updateParent = false) const;
         void wirePointMoved(Wire& wire, const point& point);
 
-        QString name() const;
-        QList<std::shared_ptr<Wire>> wires() const;
         QList<Line> lineSegments() const;
         QList<QPointF> points() const;
         std::shared_ptr<Label> label();
@@ -61,9 +59,6 @@ namespace QSchematic {
         void toggleLabel();
 
     private:
-
-        QList<std::weak_ptr<Wire>> _wires;
-        QString _name;
         std::shared_ptr<Label> _label;
         Scene* _scene{};
     };
