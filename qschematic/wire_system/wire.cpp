@@ -1,7 +1,6 @@
 #include <items/line.h>
 #include "wire.h"
 #include "wiresystem.h"
-#include "items/wire.h" // TODO: This has to be removed
 #include <QVector2D>
 #include <QLineF>
 #include <utils.h>
@@ -42,7 +41,7 @@ QVector<int> wire::junctions() const
     return indexes;
 }
 
-QList<Wire*> wire::connected_wires()
+QList<wire*> wire::connected_wires()
 {
     return _connectedWires;
 }

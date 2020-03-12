@@ -293,7 +293,7 @@ void Wire::removePoint(int index)
     } else {
         for (const auto& wire: connected_wires()) {
             for (int junctionIndex: wire->junctions()) {
-                QPointF point = wire->pointsAbsolute().at(junctionIndex);
+                QPointF point = wire->points().at(junctionIndex).toPointF();
                 if (line_segments().first().containsPoint(point)) {
                     wire->move_point_to(junctionIndex, pointsAbsolute().at(1));
                 }

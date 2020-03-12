@@ -4,10 +4,6 @@
 #include <QVector2D>
 #include "items/wirepoint.h"
 
-namespace QSchematic {
-    class Wire;
-}
-
 using namespace QSchematic; // TODO: Needs to be removed
 
 namespace wire_system
@@ -23,7 +19,7 @@ namespace wire_system
         QVector<WirePoint> points() const;
         int points_count() const;
         QVector<int> junctions() const;
-        QList<Wire*> connected_wires();
+        QList<wire*> connected_wires();
         QList<Line> line_segments() const;
         virtual void move_point_to(int index, const QPointF& moveTo);
         void set_point_is_junction(int index, bool isJunction);
@@ -42,6 +38,6 @@ namespace wire_system
 
         wire_manager* m_manager;
         QVector<WirePoint> _points;
-        QList<Wire*> _connectedWires; // TODO: Should be QList<wire_system::wire>
+        QList<wire*> _connectedWires;
     };
 }
