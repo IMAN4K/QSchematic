@@ -41,7 +41,6 @@ namespace QSchematic {
         QVector<point> wirePointsRelative() const;
         QVector<QPointF> pointsRelative() const;
         QVector<QPointF> pointsAbsolute() const;
-        void simplify();
         void move_point_to(int index, const QPointF& moveTo) override;
         bool connectWire(Wire* wire);
         void disconnectWire(Wire* wire);
@@ -75,9 +74,6 @@ namespace QSchematic {
 
     private:
         Q_DISABLE_COPY(Wire)
-
-        void removeDuplicatePoints();
-        void removeObsoletePoints();
 
         QRectF _rect;
         int _pointToMoveIndex;

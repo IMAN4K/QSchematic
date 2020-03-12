@@ -29,6 +29,7 @@ namespace wire_system
         void move_point_by(int index, const QVector2D& moveBy);
         bool point_is_on_wire(const QPointF& point) const;
         void move(const QVector2D& movedBy);
+        void simplify();
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
@@ -40,5 +41,9 @@ namespace wire_system
         wire_manager* m_manager;
         QVector<point> _points;
         QList<wire*> _connectedWires;
+
+    private:
+        void remove_duplicate_points();
+        void remove_obsolete_points();
     };
 }

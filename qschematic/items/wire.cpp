@@ -308,58 +308,6 @@ void Wire::removePoint(int index)
     m_manager->point_removed(this, index);
 }
 
-void Wire::simplify()
-{
-    prepareGeometryChange();
-    removeDuplicatePoints();
-    removeObsoletePoints();
-    calculateBoundingRect();
-}
-
-void Wire::removeDuplicatePoints()
-{
-    int i = 0;
-    while (i < points_count() - 1 and points_count() > 2) {
-        point p1 = wirePointsRelative().at(i);
-        point p2 = wirePointsRelative().at(i + 1);
-
-        // Check if p2 is the same as p1
-        if (p1 == p2) {
-            // If p1 is not a junction itself then inherit from p2
-            if (!p1.is_junction()) {
-                set_point_is_junction(i, p2.is_junction());
-            }
-            m_manager->point_removed(this, i + 1);
-            _points.removeAt(i+1);
-        } else {
-            i++;
-        }
-    }
-}
-
-void Wire::removeObsoletePoints()
-{
-    // Don't do anything if there are not at least three line segments
-    if (points_count() < 3) {
-        return;
-    }
-
-    // Compile a list of obsolete points
-    auto it = _points.begin()+2;
-    while (it != _points.end()) {
-        QPointF p1 = (*(it - 2)).toPointF();
-        QPointF p2 = (*(it - 1)).toPointF();
-        QPointF p3 = (*it).toPointF();
-
-        // Check if p2 is on the line created by p1 and p3
-        if (Utils::pointIsOnLine(QLineF(p1, p2), p3)) {
-            m_manager->point_removed(this, _points.indexOf(*(it - 1)));
-            it = _points.erase(it-1);
-        }
-        it++;
-    }
-}
-
 void Wire::move_point_to(int index, const QPointF& moveTo)
 {
     prepareGeometryChange();
