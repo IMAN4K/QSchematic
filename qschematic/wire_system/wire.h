@@ -2,7 +2,7 @@
 
 #include <QList>
 #include <QVector2D>
-#include "items/wirepoint.h"
+#include "point.h"
 
 using namespace QSchematic; // TODO: Needs to be removed
 
@@ -16,7 +16,7 @@ namespace wire_system
     public:
         wire();
         void set_manager(wire_manager* manager);
-        QVector<WirePoint> points() const;
+        QVector<point> points() const;
         int points_count() const;
         QVector<int> junctions() const;
         QList<wire*> connected_wires();
@@ -38,7 +38,7 @@ namespace wire_system
         virtual void add_segment(int index);
 
         wire_manager* m_manager;
-        QVector<WirePoint> _points;
+        QVector<point> _points;
         QList<wire*> _connectedWires;
     };
 }

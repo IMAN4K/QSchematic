@@ -29,10 +29,10 @@ set(SOURCES_PRIVATE
     items/splinewire.cpp
     items/wire.cpp
     items/wirenet.cpp
-    items/wirepoint.cpp
     items/wireroundedcorners.cpp
     wire_system/wiresystem.cpp
     wire_system/wire.cpp
+    wire_system/point.cpp
     scene.cpp
     settings.cpp
     utils.cpp
@@ -63,12 +63,12 @@ set(HEADERS_PUBLIC
     items/splinewire.h
     items/wire.h
     items/wirenet.h
-    items/wirepoint.h
     items/wireroundedcorners.h
     utils/itemscontainerutils.h
     utils/itemscustodian.h
     wire_system/wiresystem.h
     wire_system/wire.h
+    wire_system/point.h
     netlist.h
     netlistgenerator.h
     scene.h

@@ -6,11 +6,16 @@
 #include <gpds/serialize.hpp>
 #include "line.h"
 
+namespace wire_system {
+    class point;
+}
+
+using namespace wire_system;
+
 namespace QSchematic {
 
     class Item;
     class Wire;
-    class WirePoint;
     class Label;
     class Scene;
 
@@ -35,7 +40,7 @@ namespace QSchematic {
         void setHighlighted(bool highlighted);
         void setScene(Scene* scene);
         void updateLabelPos(bool updateParent = false) const;
-        void wirePointMoved(Wire& wire, const WirePoint& point);
+        void wirePointMoved(Wire& wire, const point& point);
 
         QString name() const;
         QList<std::shared_ptr<Wire>> wires() const;
@@ -44,7 +49,7 @@ namespace QSchematic {
         std::shared_ptr<Label> label();
 
     signals:
-        void pointMoved(Wire& wire, const WirePoint& point);
+        void pointMoved(Wire& wire, const point& point);
         void pointMovedByUser(Wire& wire, int index);
         void highlightChanged(bool highlighted);
         void contextMenuRequested(const QPoint& pos);

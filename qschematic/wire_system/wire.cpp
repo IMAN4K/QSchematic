@@ -16,7 +16,7 @@ void wire::set_manager(wire_system::wire_manager* manager)
     m_manager = manager;
 }
 
-QVector<WirePoint> wire::points() const
+QVector<point> wire::points() const
 {
     return _points;
 }
@@ -32,10 +32,10 @@ QVector<int> wire::junctions() const
         return {};
     }
     QVector<int> indexes;
-    if (_points.first().isJunction()) {
+    if (_points.first().is_junction()) {
         indexes.append(0);
     }
-    if (_points.last().isJunction()) {
+    if (_points.last().is_junction()) {
         indexes.append(points_count() - 1);
     }
     return indexes;
@@ -71,7 +71,7 @@ void wire::move_junctions_to_new_segment(const Line& oldSegment, const Line& new
     // Move connected junctions
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            WirePoint point = wire->points().at(jIndex);
+            point point = wire->points().at(jIndex);
             // Check if the point is on the old segment
             if (oldSegment.containsPoint(point.toPoint(), 5)) {
                 Line junctionSeg;
@@ -122,7 +122,7 @@ void wire::move_point_to(int index, const QPointF& moveTo)
     // Move junctions that are on the point
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            WirePoint point = wire->points().at(jIndex);
+            point point = wire->points().at(jIndex);
             if ((_points[index]).toPoint() == point.toPoint()) {
                 wire->move_point_by(jIndex, QVector2D(moveTo - _points[index].toPointF()));
             }
@@ -143,8 +143,8 @@ void wire::move_point_to(int index, const QPointF& moveTo)
         move_junctions_to_new_segment(segment, newSegment);
     }
 
-    WirePoint wirepoint = moveTo;
-    wirepoint.setIsJunction(_points[index].isJunction());
+    point wirepoint = moveTo;
+    wirepoint.set_is_junction(_points[index].is_junction());
     _points[index] = wirepoint;
 }
 
@@ -172,7 +172,7 @@ void wire::set_point_is_junction(int index, bool isJunction)
         return;
     }
 
-    _points[index].setIsJunction(isJunction);
+    _points[index].set_is_junction(isJunction);
 
     has_changed(); // TODO: Make sure this correctly redraws the wire
 }
@@ -180,12 +180,12 @@ void wire::set_point_is_junction(int index, bool isJunction)
 void wire::prepend_point(const QPointF& point)
 {
     about_to_change();
-    _points.prepend(WirePoint(point));
+    _points.prepend(wire_system::point(point));
     has_changed();
 
     // Update junction
     if (points_count() >= 2) {
-        set_point_is_junction(0, _points.at(1).isJunction());
+        set_point_is_junction(0, _points.at(1).is_junction());
         set_point_is_junction(1, false);
     }
 
@@ -195,12 +195,12 @@ void wire::prepend_point(const QPointF& point)
 void wire::append_point(const QPointF& point)
 {
     about_to_change();
-    _points.append(WirePoint(point));
+    _points.append(wire_system::point(point));
     has_changed();
 
     // Update junction
     if (points_count() > 2) {
-        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).isJunction());
+        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).is_junction());
         set_point_is_junction(points_count() - 2, false);
     }
 
@@ -222,7 +222,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
     // Move connected junctions
     for (const auto& wire: _connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
-            WirePoint point = wire->points().at(jIndex);
+            point point = wire->points().at(jIndex);
             Line segment = line_segments().at(index);
             if (segment.containsPoint(point.toPointF())) {
                 // Don't move it if it is on one of the points
@@ -237,7 +237,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
     // If this is the first or last segment we might need to add a new segment
     if (index == 0 or index == line_segments().count() - 1) {
         // Get the correct point
-        WirePoint point;
+        point point;
         if (index == 0) {
             point = points().first();
         } else {
@@ -250,7 +250,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
         bool isConnected = m_manager->wire_point_is_attached(this, pointIndex);
 
         // Check if it's connected to a wire
-        if (not isConnected and point.isJunction()) {
+        if (not isConnected and point.is_junction()) {
             isConnected = true; // TODO: Check why the IDE thinks this is never used
         }
 
@@ -304,7 +304,7 @@ void wire::insert_point(int index, const QPointF& point)
     }
 
     about_to_change();
-    _points.insert(index, WirePoint(m_manager->settings().snapToGrid(point)));
+    _points.insert(index, wire_system::point(m_manager->settings().snapToGrid(point)));
     has_changed();
 
     m_manager->point_inserted(this, index);

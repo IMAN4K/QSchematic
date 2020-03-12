@@ -99,8 +99,8 @@ void Wire::from_container(const gpds::container& container)
             return index1.value() < index2.value();
         });
         for (const gpds::container* pointContainer : points ) {
-            _points.append(WirePoint(pointContainer->get_value<double>("x").value_or(0),
-                                     pointContainer->get_value<double>("y").value_or(0)));
+            _points.append(point(pointContainer->get_value<double>("x").value_or(0),
+                                 pointContainer->get_value<double>("y").value_or(0)));
         }
     }
 
@@ -153,14 +153,14 @@ QPainterPath Wire::shape() const
     return resultPath;
 }
 
-QVector<WirePoint> Wire::wirePointsRelative() const
+QVector<point> Wire::wirePointsRelative() const
 {
-    QVector<WirePoint> relativePoints(_points);
+    QVector<point> relativePoints(_points);
 
-    for (WirePoint& point : relativePoints) {
-        bool isJunction = point.isJunction();
+    for (point& point : relativePoints) {
+        bool isJunction = point.is_junction();
         point = point.toPointF() - pos();
-        point.setIsJunction(isJunction);
+        point.set_is_junction(isJunction);
     }
 
     return relativePoints;
@@ -170,7 +170,7 @@ QVector<QPointF> Wire::pointsRelative() const
 {
     QVector<QPointF> points;
 
-    for (const WirePoint& point : _points) {
+    for (const point& point : _points) {
         points << point.toPointF() - pos();
     }
 
@@ -181,7 +181,7 @@ QVector<QPointF> Wire::pointsAbsolute() const
 {
     QVector<QPointF> points;
 
-    for (const WirePoint& point : _points) {
+    for (const point& point : _points) {
         points << point.toPointF();
     }
 
@@ -320,14 +320,14 @@ void Wire::removeDuplicatePoints()
 {
     int i = 0;
     while (i < points_count() - 1 and points_count() > 2) {
-        WirePoint p1 = wirePointsRelative().at(i);
-        WirePoint p2 = wirePointsRelative().at(i+1);
+        point p1 = wirePointsRelative().at(i);
+        point p2 = wirePointsRelative().at(i + 1);
 
         // Check if p2 is the same as p1
         if (p1 == p2) {
             // If p1 is not a junction itself then inherit from p2
-            if (!p1.isJunction()) {
-                set_point_is_junction(i, p2.isJunction());
+            if (!p1.is_junction()) {
+                set_point_is_junction(i, p2.is_junction());
             }
             emit pointRemoved(i+1);
             _points.removeAt(i+1);
@@ -592,8 +592,8 @@ void Wire::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWid
 
     // Draw the junction poins
     int junctionRadius = 4;
-    for (const WirePoint& wirePoint : wirePointsRelative()) {
-        if (wirePoint.isJunction()) {
+    for (const point& wirePoint : wirePointsRelative()) {
+        if (wirePoint.is_junction()) {
             painter->setPen(penJunction);
             painter->setBrush(brushJunction);
             painter->drawEllipse(wirePoint.toPointF(), junctionRadius, junctionRadius);

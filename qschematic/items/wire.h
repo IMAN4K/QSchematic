@@ -2,7 +2,7 @@
 
 #include <QAction>
 #include "item.h"
-#include "wirepoint.h"
+#include "wire_system/point.h"
 #include "wirenet.h"
 #include "line.h"
 #include "wire_system/wire.h"
@@ -38,7 +38,7 @@ namespace QSchematic {
         void removeFirstPoint();
         void removeLastPoint();
         void removePoint(int index);
-        QVector<WirePoint> wirePointsRelative() const;
+        QVector<point> wirePointsRelative() const;
         QVector<QPointF> pointsRelative() const;
         QVector<QPointF> pointsAbsolute() const;
         void simplify();
@@ -51,7 +51,7 @@ namespace QSchematic {
         void updatePosition();
 
     signals:
-        void pointMoved(Wire& wire, WirePoint& point);
+        void pointMoved(Wire& wire, point& point);
         void pointMovedByUser(Wire& wire, int index);
         void pointRemoved(int index);
         void toggleLabelRequested();

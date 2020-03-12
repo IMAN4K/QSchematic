@@ -122,7 +122,7 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
             // Update the junction on the other wire
             for (int index = 0; index < otherWire->pointsAbsolute().count(); index++) {
                 const auto point = otherWire->points().at(index);
-                if (not point.isJunction()) {
+                if (not point.is_junction()) {
                     continue;
                 }
                 if (wire->point_is_on_wire(point.toPointF())) {
@@ -236,13 +236,13 @@ bool wire_manager::addWire(const std::shared_ptr<Wire>& wire)
 
 void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
 {
-    WirePoint point = rawWire.wirePointsRelative().at(index);
+    point point = rawWire.wirePointsRelative().at(index);
 
     emit wirePointMoved(rawWire, index);
 
     // Detach wires
     if (index == 0 or index == rawWire.pointsAbsolute().count()-1){
-        if (point.isJunction()) {
+        if (point.is_junction()) {
             for (const auto& wire: wires()) {
                 // Skip current wire
                 if (wire.get() == &rawWire) {

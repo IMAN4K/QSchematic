@@ -463,7 +463,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
                 _movingNodes = false;
             }
             // Prevent the scene from detecting changes in the wires origin
-            // when the bouding rect is resized by a WirePoint that moved
+            // when the bouding rect is resized by a wire_point that moved
             Wire* wire = dynamic_cast<Wire*>(item);
             if (wire) {
                 if (wire->movingWirePoint()) {
@@ -660,7 +660,7 @@ void Scene::updateNodeConnections(const Node* node) const
             }
             if (index != -1) {
                 // Ignore if it's a junction
-                if (wire->points().at(index).isJunction()){
+                if (wire->points().at(index).is_junction()){
                     continue;
                 }
                 // Check if it isn't already connected to another connector
@@ -707,7 +707,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
     }
 
     // Attach to connector
-    WirePoint point = rawWire.points().at(index);
+    point point = rawWire.points().at(index);
     for (const auto& node: nodes()) {
         for (const auto& connector: node->connectors()) {
             if (connector->scenePos().toPoint() == point.toPoint()) {
@@ -822,7 +822,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
                 }
 
                 // Create the intermediate point that creates the straight angle
-                WirePoint prevNode(_newWire->pointsAbsolute().at(_newWire->pointsAbsolute().count()-1));
+                point prevNode(_newWire->pointsAbsolute().at(_newWire->pointsAbsolute().count() - 1));
                 QPointF corner(prevNode.x(), snappedPos.y());
                 if (_invertWirePosture) {
                     corner.setX(snappedPos.x());
@@ -836,7 +836,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
                 _newWireSegment = false;
             } else {
                 // Create the intermediate point that creates the straight angle
-                WirePoint p1(_newWire->pointsAbsolute().at(_newWire->pointsAbsolute().count()-3));
+                point p1(_newWire->pointsAbsolute().at(_newWire->pointsAbsolute().count() - 3));
                 QPointF p2(p1.x(), snappedPos.y());
                 QPointF p3(snappedPos);
                 if (_invertWirePosture) {
