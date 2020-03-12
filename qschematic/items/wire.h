@@ -33,7 +33,7 @@ namespace QSchematic {
         virtual QPainterPath shape() const override;
 
         void prepend_point(const QPointF& point) override;
-        void appendPoint(const QPointF& point);
+        void append_point(const QPointF& point) override;
         void insertPoint(int index, const QPointF& point);        // Index of new point
         void removeFirstPoint();
         void removeLastPoint();

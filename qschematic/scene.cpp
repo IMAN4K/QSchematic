@@ -509,7 +509,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
             }
             // Snap to grid
             const QPointF& snappedPos = _settings.snapToGrid(event->scenePos());
-            _newWire->appendPoint(snappedPos);
+            _newWire->append_point(snappedPos);
             _newWireSegment = true;
 
             // Attach point to connector if needed
@@ -827,8 +827,8 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
                 }
 
                 // Add the two new points
-                _newWire->appendPoint(corner);
-                _newWire->appendPoint(snappedPos);
+                _newWire->append_point(corner);
+                _newWire->append_point(snappedPos);
 
                 _newWireSegment = false;
             } else {
@@ -850,7 +850,7 @@ void Scene::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             if (_newWire->pointsAbsolute().count() > 1) {
                 _newWire->move_point_to(_newWire->pointsAbsolute().count() - 1, snappedPos);
             } else {
-                _newWire->appendPoint(snappedPos);
+                _newWire->append_point(snappedPos);
             }
         }
 

@@ -62,7 +62,7 @@ void CommandWirepointMove::undo()
         int diff = _oldPos.count() - _wire->wirePointsRelative().count();
         if (diff > 0) {
             for (int i = 0; i < diff; i++) {
-                _wire->appendPoint(QPointF());
+                _wire->append_point(QPointF());
             }
         } else {
             for (int i = 0; i < qAbs(diff); i++) {

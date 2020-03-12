@@ -249,19 +249,9 @@ void Wire::prepend_point(const QPointF& point)
     emit pointMoved(*this, wirePointsRelative().first());
 }
 
-void Wire::appendPoint(const QPointF& point)
+void Wire::append_point(const QPointF& point)
 {
-    prepareGeometryChange();
-    _points.append(WirePoint(point));
-    calculateBoundingRect();
-
-    // Update junction
-    if (points_count() > 2) {
-        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).isJunction());
-        set_point_is_junction(points_count() - 2, false);
-    }
-
-    m_manager->point_inserted(this, points_count() - 1);
+    wire::append_point(point);
     emit pointMoved(*this, wirePointsRelative().last());
 }
 
@@ -613,7 +603,7 @@ void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
                 _lineSegmentToMoveIndex++;
             } else {
                 // Add a point
-                appendPoint(_points.last().toPointF());
+                append_point(_points.last().toPointF());
             }
         }
     }

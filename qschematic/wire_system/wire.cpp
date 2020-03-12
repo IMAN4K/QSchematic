@@ -191,3 +191,18 @@ void wire::prepend_point(const QPointF& point)
 
     m_manager->point_inserted(this, 0);
 }
+
+void wire::append_point(const QPointF& point)
+{
+    about_to_change();
+    _points.append(WirePoint(point));
+    has_changed();
+
+    // Update junction
+    if (points_count() > 2) {
+        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).isJunction());
+        set_point_is_junction(points_count() - 2, false);
+    }
+
+    m_manager->point_inserted(this, points_count() - 1);
+}
