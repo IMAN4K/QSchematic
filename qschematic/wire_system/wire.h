@@ -30,6 +30,7 @@ namespace wire_system
         bool point_is_on_wire(const QPointF& point) const;
         void move(const QVector2D& movedBy);
         void simplify();
+        bool connect_wire(wire* wire);
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);

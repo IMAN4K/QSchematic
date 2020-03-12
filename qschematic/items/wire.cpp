@@ -318,15 +318,6 @@ void Wire::move_point_to(int index, const QPointF& moveTo)
     update();
 }
 
-bool Wire::connectWire(Wire* wire)
-{
-    if (_connectedWires.contains(wire)) {
-        return false;
-    }
-    _connectedWires.append(wire);
-    return true;
-}
-
 void Wire::disconnectWire(Wire* wire)
 {
     _connectedWires.removeAll(wire);

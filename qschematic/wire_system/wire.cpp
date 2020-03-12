@@ -551,3 +551,12 @@ void wire::simplify()
     remove_obsolete_points();
     has_changed();
 }
+
+bool wire::connect_wire(wire* wire)
+{
+    if (_connectedWires.contains(wire)) {
+        return false;
+    }
+    _connectedWires.append(wire);
+    return true;
+}

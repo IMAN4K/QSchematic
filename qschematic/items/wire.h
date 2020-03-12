@@ -42,7 +42,6 @@ namespace QSchematic {
         QVector<QPointF> pointsRelative() const;
         QVector<QPointF> pointsAbsolute() const;
         void move_point_to(int index, const QPointF& moveTo) override;
-        bool connectWire(Wire* wire);
         void disconnectWire(Wire* wire);
         void setNet(const std::shared_ptr<WireNet>& wirenet);
         std::shared_ptr<WireNet> net();

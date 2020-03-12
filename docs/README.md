@@ -153,7 +153,7 @@ point. This is done in `Scene::mouseReleaseEvent()` by calling
 
 When a point is moved away or onto another wire they have to be connected or
 disconnected accordingly. This is done in `wire_manager::wirePointMovedByUser()`.
-If two wires have to be connected it calls `wire_manager::connectWire()` and if
+If two wires have to be connected it calls `wire_manager::connect_wire()` and if
 they have to be disconnected it calls `wire_manager::disconnectWire()`.
 
 ### Adding a wire
@@ -186,7 +186,7 @@ added to the net which will
 
 When two wires from different nets are connected, we need to merge both nets.
 It will always use the net of the wire the other one is connecting to. The
-`wire_manager::connectWire()` method will simply retrieve both nets and call
+`wire_manager::connect_wire()` method will simply retrieve both nets and call
 `wire_manager::mergeNets()` that will then move all the wired from one net to
 the other.
 

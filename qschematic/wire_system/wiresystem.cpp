@@ -74,7 +74,7 @@ void wire_manager::generateJunctions()
  */
 void wire_manager::connectWire(const std::shared_ptr<Wire>& wire, std::shared_ptr<Wire>& rawWire)
 {
-    if (not wire->connectWire(rawWire.get())) {
+    if (not wire->connect_wire(rawWire.get())) {
         return;
     }
     std::shared_ptr<WireNet> net = wire->net();
