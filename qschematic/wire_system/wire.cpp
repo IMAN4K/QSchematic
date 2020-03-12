@@ -4,6 +4,7 @@
 #include "items/wire.h" // TODO: This has to be removed
 #include <QVector2D>
 #include <QLineF>
+#include <utils.h>
 
 using namespace wire_system;
 
@@ -278,4 +279,34 @@ void wire::add_segment(int index)
         // Add a point
         append_point(_points.last().toPointF());
     }
+}
+
+void wire::insert_point(int index, const QPointF& point)
+{
+    // Boundary check
+    if (index < 0 || index >= points_count()) {
+        return;
+    }
+
+    Line segment = line_segments().at(index - 1);
+    // If the point is not on the segment, move the junctions
+    if (not segment.containsPoint(point)) {
+        // Find the closest point on the segment
+        QPointF closestPoint = Utils::pointOnLineClosestToPoint(segment.p1(), segment.p2(), point);
+        // Create two line that split the segment at the closest point
+        Line seg1(segment.p1(), closestPoint);
+        Line seg2(closestPoint, segment.p2());
+        // Calculate what will be the new segments
+        Line seg1new(segment.p1(), point);
+        Line seg2new(point, segment.p2());
+        // Move the junction on both lines
+        move_junctions_to_new_segment(seg1, seg1new);
+        move_junctions_to_new_segment(seg2, seg2new);
+    }
+
+    about_to_change();
+    _points.insert(index, WirePoint(m_manager->settings().snapToGrid(point)));
+    has_changed();
+
+    m_manager->point_inserted(this, index);
 }

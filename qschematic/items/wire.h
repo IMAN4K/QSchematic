@@ -34,7 +34,7 @@ namespace QSchematic {
 
         void prepend_point(const QPointF& point) override;
         void append_point(const QPointF& point) override;
-        void insertPoint(int index, const QPointF& point);        // Index of new point
+        void insert_point(int index, const QPointF& point) override;        // Index of new point
         void removeFirstPoint();
         void removeLastPoint();
         void removePoint(int index);

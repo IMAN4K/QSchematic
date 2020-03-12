@@ -29,6 +29,7 @@ namespace wire_system
         void set_point_is_junction(int index, bool isJunction);
         virtual void prepend_point(const QPointF& point);
         virtual void append_point(const QPointF& point);
+        virtual void insert_point(int index, const QPointF& point);
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);

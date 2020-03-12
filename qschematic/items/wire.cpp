@@ -255,34 +255,9 @@ void Wire::append_point(const QPointF& point)
     emit pointMoved(*this, wirePointsRelative().last());
 }
 
-void Wire::insertPoint(int index, const QPointF& point)
+void Wire::insert_point(int index, const QPointF& point)
 {
-    // Boundary check
-    if (index < 0 || index >= points_count()) {
-        return;
-    }
-
-    Line segment = line_segments().at(index - 1);
-    // If the point is not on the segment, move the junctions
-    if (not segment.containsPoint(point)) {
-        // Find the closest point on the segment
-        QPointF closestPoint = Utils::pointOnLineClosestToPoint(segment.p1(), segment.p2(), point);
-        // Create two line that split the segment at the closest point
-        Line seg1(segment.p1(), closestPoint);
-        Line seg2(closestPoint, segment.p2());
-        // Calculate what will be the new segments
-        Line seg1new(segment.p1(), point);
-        Line seg2new(point, segment.p2());
-        // Move the junction on both lines
-        move_junctions_to_new_segment(seg1, seg1new);
-        move_junctions_to_new_segment(seg2, seg2new);
-    }
-
-    prepareGeometryChange();
-    _points.insert(index, WirePoint(_settings.snapToGrid(point)));
-    calculateBoundingRect();
-
-    m_manager->point_inserted(this, index);
+    wire::insert_point(index, point);
     emit pointMoved(*this, wirePointsRelative()[index]);
 }
 
@@ -428,8 +403,8 @@ void Wire::movePointBy(int index, const QVector2D& moveBy)
 
             // Insert twice as these two points will form the new additional vertical or
             // horizontal line segment that is required to preserver straight angles.
-            insertPoint(1, p);
-            insertPoint(1, p);
+            insert_point(1, p);
+            insert_point(1, p);
 
             // Account for inserted points
             if (index == 1) {
@@ -911,7 +886,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
         for (int i = 0; i < line_segments().count(); i++) {
             if (line_segments().at(i).containsPoint(event->scenePos(), 4)) {
                 setSelected(true);
-                insertPoint(i + 1, _settings.snapToGrid(event->scenePos()));
+                insert_point(i + 1, _settings.snapToGrid(event->scenePos()));
                 break;
             }
         }
