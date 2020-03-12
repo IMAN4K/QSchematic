@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QList>
+#include <QVector2D>
 #include "items/wirepoint.h"
 
 namespace QSchematic {
@@ -33,6 +34,8 @@ namespace wire_system
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
         virtual void about_to_change();
         virtual void has_changed();
+        void move_line_segment_by(int index, const QVector2D& moveBy);
+        virtual void add_segment(int index);
 
         wire_manager* m_manager;
         QVector<WirePoint> _points;

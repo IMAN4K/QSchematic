@@ -512,3 +512,19 @@ void wire_manager::connectorMoved(const std::shared_ptr<Connector>& connector)
         wirePoint.first->movePointBy(wirePoint.second, moveBy);
     }
 }
+
+/**
+ * Returns whether the wire's point is attached to a connector
+ */
+bool wire_manager::wire_point_is_attached(wire_system::wire* wire, int index)
+{
+    for (const auto& wire_point : _connections.values()) {
+        if (wire_point.first.get() != wire) {
+            continue;
+        }
+        if (wire_point.second == index) {
+            return true;
+        }
+    }
+    return false;
+}

@@ -450,7 +450,7 @@ void Wire::movePointBy(int index, const QVector2D& moveBy)
 
             // Make sure that two wire points never collide
             if (pointsAbsolute().count() > 3 and index >= 2 and Line(currPoint+moveBy.toPointF(), prevPoint).lenght() <= 2) {
-                moveLineSegmentBy(index-2, moveBy);
+                move_line_segment_by(index - 2, moveBy);
             }
 
             // Move junctions before the points are moved
@@ -490,7 +490,7 @@ void Wire::movePointBy(int index, const QVector2D& moveBy)
 
             // Make sure that two wire points never collide
             if (pointsAbsolute().count() > 3 and Line(currPoint+moveBy.toPointF(), nextPoint).lenght() <= 2) {
-                moveLineSegmentBy(index+1, moveBy);
+                move_line_segment_by(index + 1, moveBy);
             }
 
             // Move junctions before the points are moved
@@ -537,93 +537,6 @@ void Wire::move_point_to(int index, const QPointF& moveTo)
     emit pointMoved(*this, wirePointsRelative()[index]);
     calculateBoundingRect();
     update();
-}
-
-void Wire::moveLineSegmentBy(int index, const QVector2D& moveBy)
-{
-    // Do nothing if not moving
-    if (moveBy.isNull()) {
-        return;
-    }
-
-    // Have points_count()-2 in here because N points form N-1 line segments
-    if (index < 0 or index > points_count() - 2) {
-        return;
-    }
-
-    // Move connected junctions
-    for (const auto& wire: _connectedWires) {
-        for (const auto& jIndex: wire->junctions()) {
-            WirePoint point = wire->points().at(jIndex);
-            Line segment = line_segments().at(index);
-            if (segment.containsPoint(point.toPointF())) {
-                // Don't move it if it is on one of the points
-                if (segment.p1().toPoint() == point.toPoint() or segment.p2().toPoint() == point.toPoint()) {
-                    continue;
-                }
-                wire->movePointBy(jIndex, moveBy);
-            }
-        }
-    }
-
-    // If this is the first or last segment we might need to add a new segment
-    if (index == 0 or index == line_segments().count() - 1) {
-        // Get the correct point
-        WirePoint point;
-        if (index == 0) {
-            point = points().first();
-        } else {
-            point = points().last();
-        }
-
-        int pointIndex = (index == 0) ? 0 : points_count() - 1;
-
-        bool isConnected = false;
-        // Check if the segment is connected to a node
-        for (const auto& connector : scene()->connectors()) {
-            if (scene()->wireSystem()->attachedWire(connector).get() == this and
-                scene()->wireSystem()->attachedWirepoint(connector) == pointIndex) {
-                isConnected = true;
-                break;
-            }
-        }
-
-        // Check if it's connected to a wire
-        if (not isConnected and point.isJunction()) {
-            isConnected = true;
-        }
-
-        // Add segment if it is connected
-        if (isConnected) {
-            if (index == 0) {
-                // Add a point
-                prepend_point(_points.first().toPointF());
-                // Increment indices to account for inserted point
-                index++;
-                _lineSegmentToMoveIndex++;
-            } else {
-                // Add a point
-                append_point(_points.last().toPointF());
-            }
-        }
-    }
-
-    // Move the line segment
-    // Move point 1
-    {
-        const QPointF& newPos = _points[index] + moveBy.toPointF();
-        const std::shared_ptr<Wire>& wirePtr = this->sharedPtr<Wire>();
-        auto cmd = new CommandWirepointMove(scene(), wirePtr, index, newPos);
-        Q_ASSERT(scene());
-        scene()->undoStack()->push(cmd);
-    }
-    // Move point 2
-    {
-        const QPointF& newPos = _points[index + 1] + moveBy.toPointF();
-        const std::shared_ptr<Wire>& wirePtr = this->sharedPtr<Wire>();
-        auto cmd = new CommandWirepointMove(scene(), wirePtr, index+1, newPos);
-        scene()->undoStack()->push(cmd);
-    }
 }
 
 bool Wire::pointIsOnWire(const QPointF& point) const
@@ -745,7 +658,7 @@ void Wire::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
         }
 
         // Move line segment
-        moveLineSegmentBy(_lineSegmentToMoveIndex, moveLineBy);
+        move_line_segment_by(_lineSegmentToMoveIndex, moveLineBy);
     }
 
     // Nothing interesting for us to do
@@ -1081,4 +994,12 @@ void Wire::about_to_change()
 void Wire::has_changed()
 {
     calculateBoundingRect();
+}
+
+void Wire::add_segment(int index)
+{
+    if (index == 0) {
+        _lineSegmentToMoveIndex++;
+    }
+    wire::add_segment(index);
 }

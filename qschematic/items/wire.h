@@ -44,7 +44,6 @@ namespace QSchematic {
         void simplify();
         void movePointBy(int index, const QVector2D& moveBy);
         void move_point_to(int index, const QPointF& moveTo) override;
-        void moveLineSegmentBy(int index, const QVector2D& moveBy);
         bool pointIsOnWire(const QPointF& point) const;
         bool connectWire(Wire* wire);
         void disconnectWire(Wire* wire);
@@ -75,6 +74,7 @@ namespace QSchematic {
         virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override;
         void about_to_change() override;
         void has_changed() override;
+        void add_segment(int index) override;
 
     private:
         Q_DISABLE_COPY(Wire)
