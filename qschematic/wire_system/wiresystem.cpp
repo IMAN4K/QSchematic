@@ -509,7 +509,7 @@ void wire_manager::connectorMoved(const std::shared_ptr<Connector>& connector)
     QPointF oldPos = wirePoint.first->points().at(wirePoint.second).toPointF();
     QVector2D moveBy = QVector2D(connector->scenePos() - oldPos);
     if (not moveBy.isNull()) {
-        wirePoint.first->movePointBy(wirePoint.second, moveBy);
+        wirePoint.first->move_point_by(wirePoint.second, moveBy);
     }
 }
 

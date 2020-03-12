@@ -360,150 +360,6 @@ void Wire::removeObsoletePoints()
     }
 }
 
-void Wire::movePointBy(int index, const QVector2D& moveBy)
-{
-    if (index < 0 or index > points_count() - 1) {
-        return;
-    }
-
-    // If there are only two points (one line segment) and we are supposed to preserve
-    // straight angles, we need to insert two additional points if we are not moving in
-    // the direction of the line.
-    if (pointsRelative().count() == 2 && _settings.preserveStraightAngles) {
-        const Line line = line_segments().first();
-
-        bool moveVertically = line.isHorizontal() and not qFuzzyIsNull(moveBy.y());
-        bool moveHorizontally = line.isVertical() and not qFuzzyIsNull(moveBy.x());
-        // Only do this if we're not moving in the direction of the line. Because in that case
-        // this is unnecessary as we're just moving one of the two points.
-        if (not line.isNull() and (moveVertically or moveHorizontally)) {
-            qreal lineLength = line.lenght();
-            QPointF p;
-
-            // The line is horizontal
-            if (line.isHorizontal()) {
-                QPointF leftPoint = line.p1();
-                if (line.p2().x() < line.p1().x()) {
-                    leftPoint = line.p2();
-                }
-
-                p.rx() = leftPoint.x() + static_cast<int>(lineLength/2);
-                p.ry() = leftPoint.y();
-
-            // The line is vertical
-            } else {
-                QPointF upperPoint = line.p1();
-                if (line.p2().y() < line.p1().y()) {
-                    upperPoint = line.p2();
-                }
-
-                p.rx() = upperPoint.x();
-                p.ry() = upperPoint.y() + static_cast<int>(lineLength/2);
-            }
-
-            // Insert twice as these two points will form the new additional vertical or
-            // horizontal line segment that is required to preserver straight angles.
-            insert_point(1, p);
-            insert_point(1, p);
-
-            // Account for inserted points
-            if (index == 1) {
-                index += 2;
-            }
-        }
-    }
-
-    // Move the points
-    QPointF currPoint = pointsAbsolute().at(index);
-    // Preserve straight angles (if supposed to)
-    if (_settings.preserveStraightAngles) {
-
-        // Move previous point
-        if (index >= 1) {
-            QPointF prevPoint = pointsAbsolute().at(index-1);
-            Line line(prevPoint, currPoint);
-
-            // Make sure that two wire points never collide
-            if (pointsAbsolute().count() > 3 and index >= 2 and Line(currPoint+moveBy.toPointF(), prevPoint).lenght() <= 2) {
-                move_line_segment_by(index - 2, moveBy);
-            }
-
-            // Move junctions before the points are moved
-            if (not line.isNull() and (line.isHorizontal() or line.isVertical())) {
-                // Move connected junctions
-                for (const auto& wire: _connectedWires) {
-                    for (const auto& jIndex: wire->junctions()) {
-                        const auto& point = wire->points().at(jIndex);
-                        if (line.containsPoint(point.toPointF())) {
-                            // Don't move it if it is on one of the points
-                            if (line.p1().toPoint() == point.toPoint() or line.p2().toPoint() == point.toPoint()) {
-                                continue;
-                            }
-                            if (line.isHorizontal()) {
-                                wire->movePointBy(jIndex, QVector2D(0, moveBy.y()));
-                            } else {
-                                wire->movePointBy(jIndex, QVector2D(moveBy.x(), 0));
-                            }
-                        }
-                    }
-                }
-                // The line is horizontal
-                if (line.isHorizontal()) {
-                    move_point_to(index - 1, pointsAbsolute().at(index - 1) + QPointF(0, moveBy.toPointF().y()));
-                }
-                // The line is vertical
-                else if (line.isVertical()) {
-                    move_point_to(index - 1, pointsAbsolute().at(index - 1) + QPointF(moveBy.toPointF().x(), 0));
-                }
-            }
-        }
-
-        // Move next point
-        if (index < pointsAbsolute().count()-1) {
-            QPointF nextPoint = pointsAbsolute().at(index+1);
-            Line line(currPoint, nextPoint);
-
-            // Make sure that two wire points never collide
-            if (pointsAbsolute().count() > 3 and Line(currPoint+moveBy.toPointF(), nextPoint).lenght() <= 2) {
-                move_line_segment_by(index + 1, moveBy);
-            }
-
-            // Move junctions before the points are moved
-            if (not line.isNull() and (line.isHorizontal() or line.isVertical())) {
-                // Move connected junctions
-                for (const auto& wire: _connectedWires) {
-                    for (const auto& jIndex: wire->junctions()) {
-                        const auto& point = wire->points().at(jIndex);
-                        if (line.containsPoint(point.toPointF())) {
-                            // Don't move it if it is on one of the points
-                            if (line.p1().toPoint() == point.toPoint() or line.p2().toPoint() == point.toPoint()) {
-                                continue;
-                            }
-                            if (line.isHorizontal()) {
-                                wire->movePointBy(jIndex, QVector2D(0, moveBy.y()));
-                            } else {
-                                wire->movePointBy(jIndex, QVector2D(moveBy.x(), 0));
-                            }
-                        }
-                    }
-                }
-                // The line is horizontal
-                if (line.isHorizontal()) {
-                    move_point_to(index + 1, pointsAbsolute().at(index + 1) + QPointF(0, moveBy.toPointF().y()));
-                }
-                // The line is vertical
-                else if (line.isVertical()) {
-                    move_point_to(index + 1, pointsAbsolute().at(index + 1) + QPointF(moveBy.toPointF().x(), 0));
-                }
-            }
-        }
-    }
-
-    // Move the actual point itself
-    move_point_to(index, currPoint + moveBy.toPointF());
-
-}
-
 void Wire::move_point_to(int index, const QPointF& moveTo)
 {
     prepareGeometryChange();
@@ -795,7 +651,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                         continue;
                     }
                     if (wire->pointIsOnWire(junction.toPointF()) and not movedBy.isNull()) {
-                        movePointBy(index, -movedBy);
+                        move_point_by(index, -movedBy);
                     }
                 }
             }
@@ -804,7 +660,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                 for (const auto& index : wire->junctions()) {
                     const auto& point = wire->points().at(index);
                     if (pointIsOnWire(point.toPointF())) {
-                        wire->movePointBy(index, movedBy);
+                        wire->move_point_by(index, movedBy);
                     }
                 }
             }
@@ -835,7 +691,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
             if (not isSelected and scene()->wireSystem()->attachedWire(conn).get() == this) {
                 int index = scene()->wireSystem()->attachedWirepoint(conn);
                 QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
-                movePointBy(index, moveBy);
+                move_point_by(index, moveBy);
             }
         }
         break;

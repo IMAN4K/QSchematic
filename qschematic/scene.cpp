@@ -1128,7 +1128,8 @@ void Scene::removeLastWirePoint()
             _newWire->removeLastPoint();
             _newWire->removeLastPoint();
             // Move the new last point to where the previous last point was
-            _newWire->movePointBy(_newWire->pointsAbsolute().count() - 1, QVector2D(mousePos - _newWire->pointsAbsolute().last()));
+            _newWire->move_point_by(_newWire->pointsAbsolute().count() - 1,
+                                    QVector2D(mousePos - _newWire->pointsAbsolute().last()));
         }
     }
 

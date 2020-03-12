@@ -42,7 +42,6 @@ namespace QSchematic {
         QVector<QPointF> pointsRelative() const;
         QVector<QPointF> pointsAbsolute() const;
         void simplify();
-        void movePointBy(int index, const QVector2D& moveBy);
         void move_point_to(int index, const QPointF& moveTo) override;
         bool pointIsOnWire(const QPointF& point) const;
         bool connectWire(Wire* wire);
