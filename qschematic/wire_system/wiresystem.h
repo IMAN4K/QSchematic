@@ -33,7 +33,7 @@ public:
     bool addWire(const std::shared_ptr<Wire>& wire);
     void attachWireToConnector(const std::shared_ptr<Wire>& wire, int index, const std::shared_ptr<Connector>& connector);
     void attachWireToConnector(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Connector>& connector);
-    std::shared_ptr<Wire> attachedWire(const std::shared_ptr<Connector>& connector);
+    std::shared_ptr<wire> attached_wire(const std::shared_ptr<Connector>& connector);
     int attachedWirepoint(const std::shared_ptr<Connector>& connector);
     void detachWire(const std::shared_ptr<Connector>& connector);
     std::shared_ptr<Wire> wireWithExtremityAt(const QPointF& point);
@@ -53,13 +53,13 @@ private:
     void wirePointMovedByUser(Wire& rawWire, int index);
     void wireNetHighlightChanged(bool highlighted);
     QList<std::shared_ptr<WireNet>> nets(const std::shared_ptr<WireNet> wireNet) const;
-    QMap<std::shared_ptr<Connector>, QPair<std::shared_ptr<Wire>, int>> _connections;
     void detachWire(const std::shared_ptr<Wire>& wire);
     void detachWireFromAll(const std::shared_ptr<Wire>& wire);
-    QList<std::shared_ptr<Connector>> connectorsAttachedToWire(const std::shared_ptr<Wire>& wire);
+    QList<std::shared_ptr<Connector>> connectors_attached_to_wire(const std::shared_ptr<wire>& wire);
     void connectorMoved(const std::shared_ptr<Connector>& connector);
 
     Settings _settings;
+    QMap<std::shared_ptr<Connector>, QPair<std::shared_ptr<wire>, int>> _connections;
 };
 
 }

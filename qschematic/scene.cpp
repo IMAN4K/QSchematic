@@ -647,7 +647,7 @@ void Scene::updateNodeConnections(const Node* node) const
     // Check if a connector lays on a wirepoint
     for (auto& connector : node->connectors()) {
         // If the connector already has a wire attached, skip
-        if (_wireSystem->attachedWire(connector) != nullptr) {
+        if (_wireSystem->attached_wire(connector) != nullptr) {
             continue;
         }
         // Find if there is a point to connect to
@@ -669,7 +669,7 @@ void Scene::updateNodeConnections(const Node* node) const
                     if (otherConnector == connector) {
                         continue;
                     }
-                    if (_wireSystem->attachedWire(connector) == wire and
+                    if (_wireSystem->attached_wire(connector) == wire and
                         _wireSystem->attachedWirepoint(otherConnector) == index) {
                         alreadyConnected = true;
                         break;
@@ -689,7 +689,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
     // Detach from connector
     for (const auto& node: nodes()) {
         for (const auto& connector: node->connectors()) {
-            const Wire* wire = _wireSystem->attachedWire(connector).get();
+            const wire* wire = _wireSystem->attached_wire(connector).get();
             if (not wire) {
                 continue;
             }
@@ -1177,7 +1177,7 @@ void Scene::removeUnconnectedWires()
 
         // Find out if it's attached to a node
         for (const auto& connector : connectors()) {
-            if (_wireSystem->attachedWire(connector) == wire) {
+            if (_wireSystem->attached_wire(connector) == wire) {
                 isConnected = true;
                 break;
             }
@@ -1223,7 +1223,7 @@ bool Scene::removeWire(const std::shared_ptr<Wire>& wire)
 
     // Disconnect from connectors
     for (const auto& connector: connectors()) {
-        if (_wireSystem->attachedWire(connector) == wire) {
+        if (_wireSystem->attached_wire(connector) == wire) {
             _wireSystem->detachWire(connector);
         }
     }

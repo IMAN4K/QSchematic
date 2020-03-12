@@ -424,7 +424,7 @@ void wire_manager::point_removed(const wire* wire, int index)
     }
 }
 
-QList<std::shared_ptr<Connector>> wire_manager::connectorsAttachedToWire(const std::shared_ptr<Wire>& wire)
+QList<std::shared_ptr<Connector>> wire_manager::connectors_attached_to_wire(const std::shared_ptr<wire>& wire)
 {
     QList<std::shared_ptr<Connector>> connectors;
     for (const auto& connector : _connections.keys()) {
@@ -439,10 +439,6 @@ void wire_manager::detachWire(const std::shared_ptr<Connector>& connector)
 {
     const auto& wire = _connections.value(connector).first;
     _connections.remove(connector);
-    // Disconnect if the wire is not connected to any other connector
-    if (connectorsAttachedToWire(wire).isEmpty()) {
-        disconnect(wire.get(), nullptr, this, nullptr);
-    }
 }
 
 std::shared_ptr<Wire> wire_manager::wireWithExtremityAt(const QPointF& point)
@@ -471,7 +467,7 @@ void wire_manager::detachWireFromAll(const std::shared_ptr<Wire>& wire)
     }
 }
 
-std::shared_ptr<Wire> wire_manager::attachedWire(const std::shared_ptr<Connector>& connector)
+std::shared_ptr<wire> wire_manager::attached_wire(const std::shared_ptr<Connector>& connector)
 {
     if (not _connections.contains(connector)) {
         return nullptr;
@@ -494,12 +490,7 @@ void wire_manager::connectorMoved(const std::shared_ptr<Connector>& connector)
     }
     const auto wirePoint = _connections.value(connector);
 
-    // Ignore if the wire is not in the same scene
-    if (wirePoint.first->scene() != connector->scene()) {
-        return;
-    }
-
-    if (wirePoint.second < -1 or wirePoint.first->wirePointsRelative().count() <= wirePoint.second) {
+    if (wirePoint.second < -1 or wirePoint.first->points_count() <= wirePoint.second) {
         return;
     }
 
