@@ -363,7 +363,6 @@ void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, int 
 
     // Update index when points are inserted/removed
     if (connectorsAttachedToWire(wire).isEmpty()) {
-        connect(wire.get(), &Wire::pointRemoved, this, [=](int index) { pointRemoved(wire, index); });
         connect(wire.get(), &QObject::destroyed, this, [=] { detachWireFromAll(wire); });
     }
 
@@ -411,12 +410,12 @@ void wire_manager::point_inserted(const wire* wire, int index)
     }
 }
 
-void wire_manager::pointRemoved(const std::shared_ptr<Wire>& wire, int index)
+void wire_manager::point_removed(const wire* wire, int index)
 {
     for (const auto& connector : _connections.keys()) {
         // Skip if it's not the connected to the wire
         auto wirePoint = _connections.value(connector);
-        if (_connections.value(connector).first != wire) {
+        if (_connections.value(connector).first.get() != wire) {
             continue;
         }
         if (wirePoint.second >= index) {

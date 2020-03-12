@@ -305,7 +305,7 @@ void Wire::removePoint(int index)
     }
     _points.remove(index);
     calculateBoundingRect();
-    emit pointRemoved(index);
+    m_manager->point_removed(this, index);
 }
 
 void Wire::simplify()
@@ -329,7 +329,7 @@ void Wire::removeDuplicatePoints()
             if (!p1.is_junction()) {
                 set_point_is_junction(i, p2.is_junction());
             }
-            emit pointRemoved(i+1);
+            m_manager->point_removed(this, i + 1);
             _points.removeAt(i+1);
         } else {
             i++;
@@ -353,7 +353,7 @@ void Wire::removeObsoletePoints()
 
         // Check if p2 is on the line created by p1 and p3
         if (Utils::pointIsOnLine(QLineF(p1, p2), p3)) {
-            emit pointRemoved(_points.indexOf(*(it-1)));
+            m_manager->point_removed(this, _points.indexOf(*(it - 1)));
             it = _points.erase(it-1);
         }
         it++;

@@ -53,7 +53,6 @@ namespace QSchematic {
         void pointMovedByUser(Wire& wire, int index);
         void highlightChanged(bool highlighted);
         void contextMenuRequested(const QPoint& pos);
-        void pointRemoved(Wire& rawWire, int index);
 
     private slots:
         void wirePointMovedByUser(Wire& wire, int index);

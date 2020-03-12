@@ -41,6 +41,7 @@ public:
     bool wire_point_is_attached(wire_system::wire* wire, int index);
     void set_settings(const Settings& settings);
     Settings settings() const;
+    void point_removed(const wire* wire, int index);
 
 signals:
     void wirePointMoved(Wire& wire, int index);
@@ -53,7 +54,6 @@ private:
     void wireNetHighlightChanged(bool highlighted);
     QList<std::shared_ptr<WireNet>> nets(const std::shared_ptr<WireNet> wireNet) const;
     QMap<std::shared_ptr<Connector>, QPair<std::shared_ptr<Wire>, int>> _connections;
-    void pointRemoved(const std::shared_ptr<Wire>& wire, int index);
     void detachWire(const std::shared_ptr<Wire>& wire);
     void detachWireFromAll(const std::shared_ptr<Wire>& wire);
     QList<std::shared_ptr<Connector>> connectorsAttachedToWire(const std::shared_ptr<Wire>& wire);
