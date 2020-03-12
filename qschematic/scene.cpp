@@ -520,7 +520,8 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
             for (const auto& node: nodes()) {
                 for (const auto& connector: node->connectors()) {
                     if (QVector2D(connector->scenePos() - snappedPos).length() < 1) {
-                        _wireSystem->attachWireToConnector(_newWire, _newWire->pointsAbsolute().indexOf(snappedPos), connector);
+                        _wireSystem->attach_wire_to_connector(_newWire, _newWire->pointsAbsolute().indexOf(snappedPos),
+                                                              connector);
                         wireAttached = true;
                         break;
                     }
@@ -677,7 +678,7 @@ void Scene::updateNodeConnections(const Node* node) const
                 }
                 // If it's not already connected, connect it
                 if (not alreadyConnected) {
-                    _wireSystem->attachWireToConnector(wire, index, connector);
+                    _wireSystem->attach_wire_to_connector(wire, index, connector);
                 }
             }
         }
@@ -711,7 +712,7 @@ void Scene::wirePointMoved(Wire& rawWire, int index)
     for (const auto& node: nodes()) {
         for (const auto& connector: node->connectors()) {
             if (connector->scenePos().toPoint() == point.toPoint()) {
-                _wireSystem->attachWireToConnector(rawWire.sharedPtr<Wire>(), index, connector);
+                _wireSystem->attach_wire_to_connector(rawWire.sharedPtr<Wire>(), index, connector);
             }
         }
     }
@@ -1054,7 +1055,7 @@ void Scene::generateConnections()
     for (const auto& connector : connectors()) {
         std::shared_ptr<Wire> wire = _wireSystem->wireWithExtremityAt(connector->scenePos());
         if (wire) {
-            _wireSystem->attachWireToConnector(wire, connector);
+            _wireSystem->attach_wire_to_connector(wire, connector);
         }
     }
 }

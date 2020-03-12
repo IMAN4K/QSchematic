@@ -116,7 +116,7 @@ void wire_manager::clear()
 bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
 {
     // Detach from all connectors
-    detachWireFromAll(wire);
+    detach_wire_from_all(wire);
 
     // Disconnect from connected wires
     for (const auto& otherWire: wiresConnectedTo(wire)) {
@@ -348,7 +348,7 @@ QList<std::shared_ptr<WireNet>> wire_manager::nets(const std::shared_ptr<WireNet
     return list;
 }
 
-void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, int index, const std::shared_ptr<Connector>& connector)
+void wire_manager::attach_wire_to_connector(const std::shared_ptr<wire>& wire, int index, const std::shared_ptr<Connector>& connector)
 {
     if (not wire or not connector) {
         return;
@@ -374,16 +374,16 @@ void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, int 
  * Connects a wire to a connector and finds out with end should be connected.
  * \remark If the connector is not on one of the ends, it does nothing
  */
-void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, const std::shared_ptr<Connector>& connector)
+void wire_manager::attach_wire_to_connector(const std::shared_ptr<wire>& wire, const std::shared_ptr<Connector>& connector)
 {
     // Check if it's the first point
     if (wire->points().first().toPoint() == connector->scenePos().toPoint()) {
-        attachWireToConnector(wire, 0, connector);
+        attach_wire_to_connector(wire, 0, connector);
     }
 
     // Check if it's the last point
     else if (wire->points().last().toPoint() == connector->scenePos().toPoint()) {
-        attachWireToConnector(wire, wire->points().count() - 1, connector);
+        attach_wire_to_connector(wire, wire->points().count() - 1, connector);
     }
 }
 
@@ -453,7 +453,7 @@ std::shared_ptr<Wire> wire_manager::wireWithExtremityAt(const QPointF& point)
     return nullptr;
 }
 
-void wire_manager::detachWireFromAll(const std::shared_ptr<Wire>& wire)
+void wire_manager::detach_wire_from_all(const std::shared_ptr<wire>& wire)
 {
     for (const auto& connector : _connections.keys()) {
         // Skip if it's not the connected to the wire
@@ -462,7 +462,6 @@ void wire_manager::detachWireFromAll(const std::shared_ptr<Wire>& wire)
             continue;
         }
 
-        disconnect(wire.get(), nullptr, this, nullptr);
         _connections.remove(connector);
     }
 }

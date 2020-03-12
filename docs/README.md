@@ -125,7 +125,7 @@ anything because the point will technically no longer be on the segment.
 ## Connectors
 
 When the extremity of a wire is moved onto a connector it gets connected to it.
-This is implemented in `wire_manager::attachWireToConnector()`. There are quite
+This is implemented in `wire_manager::attach_wire_to_connector()`. There are quite
 a few places this has to be used.
 
 The most straightforward being in `wire_manager::wirePointMovedByUser()`. As
