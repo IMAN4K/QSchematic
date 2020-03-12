@@ -115,6 +115,9 @@ void wire_manager::clear()
 
 bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
 {
+    // Detach from all connectors
+    detachWireFromAll(wire);
+
     // Disconnect from connected wires
     for (const auto& otherWire: wiresConnectedTo(wire)) {
         if (otherWire != wire) {
@@ -359,11 +362,6 @@ void wire_manager::attachWireToConnector(const std::shared_ptr<Wire>& wire, int 
     // Ignore if there is already one attached
     if (_connections.contains(connector)) {
         return;
-    }
-
-    // Update index when points are inserted/removed
-    if (connectorsAttachedToWire(wire).isEmpty()) {
-        connect(wire.get(), &QObject::destroyed, this, [=] { detachWireFromAll(wire); });
     }
 
     _connections.insert(connector, { wire, index });
