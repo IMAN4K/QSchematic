@@ -31,6 +31,7 @@ namespace wire_system
         virtual void append_point(const QPointF& point);
         virtual void insert_point(int index, const QPointF& point);
         void move_point_by(int index, const QVector2D& moveBy);
+        bool point_is_on_wire(const QPointF& point) const;
 
     protected: // TODO: All these members should be private
         void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);

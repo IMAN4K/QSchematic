@@ -55,11 +55,11 @@ void wire_manager::generateJunctions()
             if (wire == otherWire) {
                 continue;
             }
-            if (wire->pointIsOnWire(otherWire->points().first().toPointF())) {
+            if (wire->point_is_on_wire(otherWire->points().first().toPointF())) {
                 connectWire(wire, otherWire);
                 otherWire->set_point_is_junction(0, true);
             }
-            if (wire->pointIsOnWire(otherWire->points().last().toPointF())) {
+            if (wire->point_is_on_wire(otherWire->points().last().toPointF())) {
                 connectWire(wire, otherWire);
                 otherWire->set_point_is_junction(otherWire->points().count() - 1, true);
             }
@@ -125,7 +125,7 @@ bool wire_manager::removeWire(const std::shared_ptr<Wire> wire)
                 if (not point.isJunction()) {
                     continue;
                 }
-                if (wire->pointIsOnWire(point.toPointF())) {
+                if (wire->point_is_on_wire(point.toPointF())) {
                     otherWire->set_point_is_junction(index, false);
                 }
             }
@@ -259,7 +259,7 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
                             continue;
                         }
                         // If the point is on the line stay connected
-                        if (wire->pointIsOnWire(junction.toPointF())) {
+                        if (wire->point_is_on_wire(junction.toPointF())) {
                             shouldDisconnect = false;
                             break;
                         }
@@ -281,7 +281,7 @@ void wire_manager::wirePointMovedByUser(Wire& rawWire, int index)
             if (wire.get() == &rawWire) {
                 continue;
             }
-            if (wire->pointIsOnWire(rawWire.points().at(index).toPointF())) {
+            if (wire->point_is_on_wire(rawWire.points().at(index).toPointF())) {
                 if (not rawWire.connected_wires().contains(wire.get())) {
                     rawWire.set_point_is_junction(index, true);
                     auto rawWirePtr = std::static_pointer_cast<Wire>(rawWire.sharedPtr());

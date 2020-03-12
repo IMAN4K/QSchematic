@@ -370,17 +370,6 @@ void Wire::move_point_to(int index, const QPointF& moveTo)
     update();
 }
 
-bool Wire::pointIsOnWire(const QPointF& point) const
-{
-    for (const Line& lineSegment : line_segments()) {
-        if (lineSegment.containsPoint(point, 0)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 bool Wire::connectWire(Wire* wire)
 {
     if (_connectedWires.contains(wire)) {
@@ -650,7 +639,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                     if (not wire->connected_wires().contains(this)) {
                         continue;
                     }
-                    if (wire->pointIsOnWire(junction.toPointF()) and not movedBy.isNull()) {
+                    if (wire->point_is_on_wire(junction.toPointF()) and not movedBy.isNull()) {
                         move_point_by(index, -movedBy);
                     }
                 }
@@ -659,7 +648,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
             for (const auto& wire : connected_wires()) {
                 for (const auto& index : wire->junctions()) {
                     const auto& point = wire->points().at(index);
-                    if (pointIsOnWire(point.toPointF())) {
+                    if (point_is_on_wire(point.toPointF())) {
                         wire->move_point_by(index, movedBy);
                     }
                 }

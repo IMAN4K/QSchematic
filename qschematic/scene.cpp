@@ -533,7 +533,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
                 if (wire == _newWire) {
                     continue;
                 }
-                if (wire->pointIsOnWire(_newWire->pointsAbsolute().last())) {
+                if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
                     _wireSystem->connectWire(wire, _newWire);
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                     wireAttached = true;
@@ -892,7 +892,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
                 if (wire == _newWire) {
                     continue;
                 }
-                if (wire->pointIsOnWire(_newWire->pointsAbsolute().last())) {
+                if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
                     _wireSystem->connectWire(wire, _newWire);
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                 }

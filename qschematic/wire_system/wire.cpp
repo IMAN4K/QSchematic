@@ -453,3 +453,14 @@ void wire::move_point_by(int index, const QVector2D& moveBy)
     // Move the actual point itself
     move_point_to(index, currPoint + moveBy.toPointF());
 }
+
+bool wire::point_is_on_wire(const QPointF& point) const
+{
+    for (const Line& lineSegment : line_segments()) {
+        if (lineSegment.containsPoint(point, 0)) {
+            return true;
+        }
+    }
+
+    return false;
+}
