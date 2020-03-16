@@ -283,7 +283,7 @@ void Wire::removePoint(int index)
     }
     _points.remove(index);
     calculateBoundingRect();
-    m_manager->point_removed(this, index);
+    manager()->point_removed(this, index);
 }
 
 void Wire::move_point_to(int index, const QPointF& moveTo)

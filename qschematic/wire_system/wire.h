@@ -35,21 +35,23 @@ namespace wire_system
         void setNet(const std::shared_ptr<wire_system::net>& net);
         [[nodiscard]] std::shared_ptr<wire_system::net> net();
         void disconnectWire(wire* wire);
-
-    protected: // TODO: All these members should be private
-        void move_junctions_to_new_segment(const line& oldSegment, const line& newSegment);
-        virtual void about_to_change();
-        virtual void has_changed();
-        void move_line_segment_by(int index, const QVector2D& moveBy);
         virtual void add_segment(int index);
 
-        wire_manager* m_manager;
+    protected:
+        void move_junctions_to_new_segment(const line& oldSegment, const line& newSegment);
+        void move_line_segment_by(int index, const QVector2D& moveBy);
+        wire_manager* manager();
+
         QVector<point> _points;
-        QList<wire*> _connectedWires;
-        std::shared_ptr<wire_system::net> _net;
 
     private:
         void remove_duplicate_points();
         void remove_obsolete_points();
+        virtual void about_to_change();
+        virtual void has_changed();
+
+        QList<wire*> _connectedWires;
+        std::shared_ptr<wire_system::net> _net;
+        wire_manager* m_manager;
     };
 }

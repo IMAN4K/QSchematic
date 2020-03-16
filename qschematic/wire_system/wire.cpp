@@ -578,3 +578,8 @@ void wire::disconnectWire(wire* wire)
     _connectedWires.removeAll(wire);
 }
 
+wire_manager* wire::manager()
+{
+    return m_manager;
+}
+
