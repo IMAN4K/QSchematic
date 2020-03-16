@@ -1,86 +1,86 @@
 #include <QtGlobal>
 #include <QLineF>
 #include <QVector2D>
+#include "utils.h"
 #include "line.h"
-#include "../utils.h"
 
-using namespace QSchematic;
+using namespace wire_system;
 
-Line::Line(int x1, int y1, int x2, int y2) :
+line::line(int x1, int y1, int x2, int y2) :
     _p1(QPointF(x1, y1)),
     _p2(QPointF(x2, y2))
 {
 }
 
-Line::Line(qreal x1, qreal y1, qreal x2, qreal y2) :
+line::line(qreal x1, qreal y1, qreal x2, qreal y2) :
     _p1(QPointF(x1, y1)),
     _p2(QPointF(x2, y2))
 {
 }
 
-Line::Line(const QPoint& p1, const QPoint& p2) :
+line::line(const QPoint& p1, const QPoint& p2) :
     _p1(p1),
     _p2(p2)
 {
 }
 
-Line::Line(const QPointF& p1, const QPointF& p2) :
+line::line(const QPointF& p1, const QPointF& p2) :
     _p1(p1),
     _p2(p2)
 {
 }
 
-QPointF Line::p1() const
+QPointF line::p1() const
 {
     return _p1;
 }
 
-QPointF Line::p2() const
+QPointF line::p2() const
 {
     return _p2;
 }
 
-bool Line::isNull() const
+bool line::is_null() const
 {
     return qFuzzyCompare(_p1.x(), _p2.x()) && qFuzzyCompare(_p1.y(), _p2.y());
 }
 
-bool Line::isHorizontal() const
+bool line::is_horizontal() const
 {
     return qFuzzyCompare(_p1.y(), _p2.y());
 }
 
-bool Line::isVertical() const
+bool line::is_vertical() const
 {
     return qFuzzyCompare(_p1.x(), _p2.x());
 }
 
-qreal Line::lenght() const
+qreal line::lenght() const
 {
     return ::QLineF(_p1, _p2).length();
 }
 
-QPointF Line::midPoint() const
+QPointF line::mid_point() const
 {
     return (_p1 + _p2) / 2;
 }
 
-bool Line::containsPoint(const QPointF& point, qreal tolerance) const
+bool line::contains_point(const QPointF& point, qreal tolerance) const
 {
-    return containsPoint(QLineF(_p1, _p2), point, tolerance);
+    return contains_point(QLineF(_p1, _p2), point, tolerance);
 }
 
-QPointF Line::pointOnLineClosestToPoint(const QPointF& point)
+QPointF line::point_on_line_closest_to(const QPointF& point)
 {
-    return Utils::pointOnLineClosestToPoint(_p1, _p2, point);
+    return QSchematic::Utils::pointOnLineClosestToPoint(_p1, _p2, point);
 }
 
-QLineF Line::toLineF() const
+QLineF line::toLineF() const
 {
     return QLineF(_p1, _p2);
 }
 
-bool Line::containsPoint(const QLineF& line, const QPointF& point, qreal tolerance)
+bool line::contains_point(const QLineF& line, const QPointF& point, qreal tolerance)
 {
     const qreal MIN_LENGTH = 0.01;
     tolerance = qMax(tolerance, MIN_LENGTH);

@@ -24,13 +24,13 @@ set(SOURCES_PRIVATE
     items/itemfactory.cpp
     items/itemmimedata.cpp
     items/label.cpp
-    items/line.cpp
+    wire_system/line.cpp
     items/node.cpp
     items/splinewire.cpp
     items/wire.cpp
     items/wirenet.cpp
     items/wireroundedcorners.cpp
-        wire_system/wiremanager.cpp
+    wire_system/wiremanager.cpp
     wire_system/wire.cpp
     wire_system/point.cpp
     wire_system/net.cpp
@@ -59,7 +59,7 @@ set(HEADERS_PUBLIC
     items/itemfactory.h
     items/itemmimedata.h
     items/label.h
-    items/line.h
+    wire_system/line.h
     items/node.h
     items/splinewire.h
     items/wire.h
@@ -67,7 +67,7 @@ set(HEADERS_PUBLIC
     items/wireroundedcorners.h
     utils/itemscontainerutils.h
     utils/itemscustodian.h
-        wire_system/wiremanager.h
+    wire_system/wiremanager.h
     wire_system/wire.h
     wire_system/point.h
     wire_system/net.h

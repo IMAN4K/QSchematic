@@ -289,17 +289,17 @@ void Wire::removePoint(int index)
     prepareGeometryChange();
     // Move the junction on the previous and next segments
     if (index > 0 and index < points_count() - 1) {
-        Line newSegment(pointsAbsolute().at(index - 1), pointsAbsolute().at(index + 1));
+        line newSegment(pointsAbsolute().at(index - 1), pointsAbsolute().at(index + 1));
         move_junctions_to_new_segment(line_segments().at(index - 1), newSegment);
         move_junctions_to_new_segment(line_segments().at(index), newSegment);
     } else {
         for (const auto& wire: connected_wires()) {
             for (int junctionIndex: wire->junctions()) {
                 QPointF point = wire->points().at(junctionIndex).toPointF();
-                if (line_segments().first().containsPoint(point)) {
+                if (line_segments().first().contains_point(point)) {
                     wire->move_point_to(junctionIndex, pointsAbsolute().at(1));
                 }
-                if (line_segments().last().containsPoint(point)) {
+                if (line_segments().last().contains_point(point)) {
                     wire->move_point_to(junctionIndex, pointsAbsolute().at(pointsAbsolute().count() - 2));
                 }
             }
@@ -338,10 +338,10 @@ void Wire::mousePressEvent(QGraphicsSceneMouseEvent* event)
         }
 
         // Check whether we clicked on a line segment
-        QList<Line> lines = line_segments();
+        QList<line> lines = line_segments();
         for (int i = 0; i < lines.count(); i++) {
-            const Line& line = lines.at(i);
-            if (line.containsPoint(event->scenePos(), 1)) {
+            const line& line = lines.at(i);
+            if (line.contains_point(event->scenePos(), 1)) {
                 _lineSegmentToMoveIndex = i;
                 setMovable(false);
                 break;
@@ -398,11 +398,11 @@ void Wire::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
         event->accept();
 
         // Determine movement vector
-        const Line line = line_segments().at(_lineSegmentToMoveIndex);
+        const line line = line_segments().at(_lineSegmentToMoveIndex);
         QVector2D moveLineBy(0, 0);
-        if (line.isHorizontal()) {
+        if (line.is_horizontal()) {
             moveLineBy = QVector2D(0, static_cast<float>(curPos.y() - _prevMousePos.y()));
-        } else if (line.isVertical()) {
+        } else if (line.is_vertical()) {
             moveLineBy = QVector2D(static_cast<float>(curPos.x() - _prevMousePos.x()), 0);
         } else if (ctrlPressed) {
             moveLineBy = QVector2D(curPos - _prevMousePos);
@@ -462,16 +462,16 @@ void Wire::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 
     // Check whether we hover over a line segment
     bool ctrlPressed = QApplication::keyboardModifiers() & Qt::ControlModifier;
-    QList<Line> lines = line_segments();
+    QList<line> lines = line_segments();
     for (int i = 0; i < lines.count(); i++) {
         // Retrieve the line segment
-        const Line& line = lines.at(i);
+        const line& line = lines.at(i);
 
         // Set the appropriate cursor
-        if (line.containsPoint(event->scenePos(), 1)) {
-            if (line.isHorizontal()) {
+        if (line.contains_point(event->scenePos(), 1)) {
+            if (line.is_horizontal()) {
                 setCursor(Qt::SizeVerCursor);
-            } else if (line.isVertical()) {
+            } else if (line.is_vertical()) {
                 setCursor(Qt::SizeHorCursor);
             } else if (ctrlPressed) {
                 setCursor(Qt::SizeAllCursor);
@@ -651,7 +651,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
     // Add a point at the cursor
     if (command == actionAdd) {
         for (int i = 0; i < line_segments().count(); i++) {
-            if (line_segments().at(i).containsPoint(event->scenePos(), 4)) {
+            if (line_segments().at(i).contains_point(event->scenePos(), 4)) {
                 setSelected(true);
                 insert_point(i + 1, _settings.snapToGrid(event->scenePos()));
                 break;
@@ -667,17 +667,17 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
     // Move the label to the cursor if it was just made visible
     if (label and not labelWasVisible and label->isVisible()) {
         // Find line segment
-        Line seg;
-        QList<Line> lines = line_segments();
+        line seg;
+        QList<line> lines = line_segments();
         for (const auto& line : lines) {
-            if (line.containsPoint(event->scenePos(), WIRE_SHAPE_PADDING/2)) {
+            if (line.contains_point(event->scenePos(), WIRE_SHAPE_PADDING / 2)) {
                 seg = line;
                 break;
             }
 
         }
         // This should never happen
-        if (seg.isNull()) {
+        if (seg.is_null()) {
             qCritical("Wire::contextMenuEvent(): Couldn't identify the segment the user clicked on.");
             return;
         }
@@ -685,11 +685,11 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
         QPointF pos = event->scenePos();
         qreal angle = QLineF(seg.p1(), seg.p2()).angle();
         // When the wire is horizontal move the label up
-        if (seg.isHorizontal()) {
+        if (seg.is_horizontal()) {
             pos.setY(seg.p1().y() - _settings.gridSize / 2);
         }
         // When the wire is vertical move the label to the right
-        else if (seg.isVertical()) {
+        else if (seg.is_vertical()) {
             pos.setX(seg.p1().x() + _settings.gridSize / 2);
         }
         // When the wire is diagonal with a positive slope move it up and to the left

@@ -201,9 +201,9 @@ void WireNet::setScene(Scene* scene)
     _scene = scene;
 }
 
-QList<Line> WireNet::lineSegments() const
+QList<line> WireNet::lineSegments() const
 {
-    QList<Line> list;
+    QList<line> list;
 
     for (const auto& wire : _wires) {
         if (wire.expired()) {

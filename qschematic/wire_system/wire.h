@@ -5,8 +5,6 @@
 #include <memory>
 #include "point.h"
 
-using namespace QSchematic; // TODO: Needs to be removed
-
 namespace wire_system
 {
     class wire_manager;
@@ -22,7 +20,7 @@ namespace wire_system
         int points_count() const;
         QVector<int> junctions() const;
         QList<wire*> connected_wires();
-        QList<Line> line_segments() const;
+        QList<line> line_segments() const;
         virtual void move_point_to(int index, const QPointF& moveTo);
         void set_point_is_junction(int index, bool isJunction);
         virtual void prepend_point(const QPointF& point);
@@ -38,7 +36,7 @@ namespace wire_system
         void disconnectWire(wire* wire);
 
     protected: // TODO: All these members should be private
-        void move_junctions_to_new_segment(const Line& oldSegment, const Line& newSegment);
+        void move_junctions_to_new_segment(const line& oldSegment, const line& newSegment);
         virtual void about_to_change();
         virtual void has_changed();
         void move_line_segment_by(int index, const QVector2D& moveBy);

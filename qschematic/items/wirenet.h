@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QList>
 #include <gpds/serialize.hpp>
-#include "line.h"
+#include "wire_system/line.h"
 #include "../wire_system/net.h"
 
 namespace wire_system {
@@ -41,7 +41,7 @@ namespace QSchematic {
         void updateLabelPos(bool updateParent = false) const;
         void wirePointMoved(Wire& wire, const point& point);
 
-        QList<Line> lineSegments() const;
+        QList<line> lineSegments() const;
         QList<QPointF> points() const;
         std::shared_ptr<Label> label();
 

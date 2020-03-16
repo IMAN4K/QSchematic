@@ -4,14 +4,11 @@
 #include "item.h"
 #include "wire_system/point.h"
 #include "wirenet.h"
-#include "line.h"
 #include "wire_system/wire.h"
 
 class QVector2D;
 
 namespace QSchematic {
-
-    class Line;
 
     /**
      * IMPORTANT NOTE: The points coordinates are RELATIVE and in SCENE COORDINATES.

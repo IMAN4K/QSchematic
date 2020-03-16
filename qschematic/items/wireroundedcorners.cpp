@@ -1,7 +1,7 @@
 #include <QPainter>
 #include <QVector2D>
 #include "wire_system/point.h"
-#include "line.h"
+#include "wire_system/line.h"
 #include "../utils.h"
 #include "wireroundedcorners.h"
 
