@@ -12,7 +12,7 @@ namespace wire_system
     class wire_manager;
     class net;
 
-    class wire : public std::enable_shared_from_this<wire>
+    class wire
     {
 
     public:

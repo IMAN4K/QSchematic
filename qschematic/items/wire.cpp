@@ -591,7 +591,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
                 }
             }
             // Move point onto the connector
-            if (not isSelected and scene()->wireSystem()->attached_wire(conn).get() == this) {
+            if (not isSelected and scene()->wireSystem()->attached_wire(conn) == this) {
                 int index = scene()->wireSystem()->attachedWirepoint(conn);
                 QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
                 move_point_by(index, moveBy);
