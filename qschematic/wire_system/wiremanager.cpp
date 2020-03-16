@@ -374,8 +374,8 @@ void wire_manager::detach_wire(const connectable* connector)
 std::shared_ptr<wire> wire_manager::wire_with_extremity_at(const QPointF& point)
 {
     for (const auto& wire : wires()) {
-        for (const auto& point : wire->points()) {
-            if (point.toPoint() == point) {
+        for (const auto& p : wire->points()) {
+            if (p.toPoint() == point.toPoint()) {
                 return wire;
             }
         }
