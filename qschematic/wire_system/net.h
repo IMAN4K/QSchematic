@@ -26,8 +26,8 @@ namespace wire_system
         void set_manager(wire_system::wire_manager* manager);
 
     protected:
-        QList<std::weak_ptr<wire>> _wires;
-        QString _name;
+        QList<std::weak_ptr<wire>> m_wires;
+        QString m_name;
         wire_manager* m_manager;
     };
 }

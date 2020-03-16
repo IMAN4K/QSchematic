@@ -67,8 +67,8 @@ gpds::container Wire::to_container() const
     for (int i = 0; i < points_count(); i++) {
         gpds::container pointContainer;
         pointContainer.add_attribute("index", i);
-        pointContainer.add_value("x", _points.at(i).x());
-        pointContainer.add_value("y", _points.at(i).y());
+        pointContainer.add_value("x", m_points.at(i).x());
+        pointContainer.add_value("y", m_points.at(i).y());
         pointsContainer.add_value("point", pointContainer);
     }
 
@@ -101,8 +101,8 @@ void Wire::from_container(const gpds::container& container)
             return index1.value() < index2.value();
         });
         for (const gpds::container* pointContainer : points ) {
-            _points.append(point(pointContainer->get_value<double>("x").value_or(0),
-                                 pointContainer->get_value<double>("y").value_or(0)));
+            m_points.append(point(pointContainer->get_value<double>("x").value_or(0),
+                                  pointContainer->get_value<double>("y").value_or(0)));
         }
     }
 
@@ -121,7 +121,7 @@ void Wire::copyAttributes(Wire& dest) const
 {
     Item::copyAttributes(dest);
 
-    dest._points = _points;
+    dest.m_points = m_points;
     dest._rect = _rect;
     dest._pointToMoveIndex = _pointToMoveIndex;
     dest._lineSegmentToMoveIndex = _lineSegmentToMoveIndex;
@@ -157,7 +157,7 @@ QPainterPath Wire::shape() const
 
 QVector<point> Wire::wirePointsRelative() const
 {
-    QVector<point> relativePoints(_points);
+    QVector<point> relativePoints(m_points);
 
     for (point& point : relativePoints) {
         bool isJunction = point.is_junction();
@@ -172,7 +172,7 @@ QVector<QPointF> Wire::pointsRelative() const
 {
     QVector<QPointF> points;
 
-    for (const point& point : _points) {
+    for (const point& point : m_points) {
         points << point.toPointF() - pos();
     }
 
@@ -183,7 +183,7 @@ QVector<QPointF> Wire::pointsAbsolute() const
 {
     QVector<QPointF> points;
 
-    for (const point& point : _points) {
+    for (const point& point : m_points) {
         points << point.toPointF();
     }
 
@@ -245,7 +245,7 @@ void Wire::removeFirstPoint()
         return;
     }
     prepareGeometryChange();
-    _points.removeFirst();
+    m_points.removeFirst();
     calculateBoundingRect();
 }
 
@@ -256,7 +256,7 @@ void Wire::removeLastPoint()
     }
 
     prepareGeometryChange();
-    _points.removeLast();
+    m_points.removeLast();
     calculateBoundingRect();
 }
 
@@ -281,7 +281,7 @@ void Wire::removePoint(int index)
             }
         }
     }
-    _points.remove(index);
+    m_points.remove(index);
     calculateBoundingRect();
     manager()->point_removed(this, index);
 }

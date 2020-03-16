@@ -12,19 +12,19 @@ void net::set_name(const std::string& name)
 
 void net::set_name(const QString& name)
 {
-    _name = name;
+    m_name = name;
 }
 
 QString net::name() const
 {
-    return _name;
+    return m_name;
 }
 
 QList<std::shared_ptr<wire>> net::wires() const
 {
     QList<std::shared_ptr<wire>> list;
 
-    for (const auto& wire: _wires) {
+    for (const auto& wire: m_wires) {
         list.append(wire.lock());
     }
 
@@ -55,16 +55,16 @@ bool net::addWire(const std::shared_ptr<wire>& wire)
     wire->setNet(shared_from_this());
 
     // Add the wire
-    _wires.append(wire);
+    m_wires.append(wire);
 
     return true;
 }
 
 bool net::removeWire(const std::shared_ptr<wire> wire)
 {
-    for (auto it = _wires.begin(); it != _wires.end(); it++) {
+    for (auto it = m_wires.begin(); it != m_wires.end(); it++) {
         if ((*it).lock() == wire) {
-            _wires.erase(it);
+            m_wires.erase(it);
             break;
         }
     }
@@ -74,7 +74,7 @@ bool net::removeWire(const std::shared_ptr<wire> wire)
 
 bool net::contains(const std::shared_ptr<wire>& wire) const
 {
-    for (const auto& w : _wires) {
+    for (const auto& w : m_wires) {
         if (w.lock() == wire) {
             return true;
         }

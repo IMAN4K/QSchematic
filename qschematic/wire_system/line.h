@@ -29,8 +29,8 @@ namespace wire_system {
         static bool contains_point(const QLineF& line, const QPointF& point, qreal tolerance = 0);
 
     private:
-        QPointF _p1;
-        QPointF _p2;
+        QPointF m_p1;
+        QPointF m_p2;
     };
 
 }

@@ -20,12 +20,12 @@ void wire::set_manager(wire_system::wire_manager* manager)
 
 QVector<point> wire::points() const
 {
-    return _points;
+    return m_points;
 }
 
 int wire::points_count() const
 {
-    return _points.count();
+    return m_points.count();
 }
 
 QVector<int> wire::junctions() const
@@ -34,10 +34,10 @@ QVector<int> wire::junctions() const
         return {};
     }
     QVector<int> indexes;
-    if (_points.first().is_junction()) {
+    if (m_points.first().is_junction()) {
         indexes.append(0);
     }
-    if (_points.last().is_junction()) {
+    if (m_points.last().is_junction()) {
         indexes.append(points_count() - 1);
     }
     return indexes;
@@ -45,7 +45,7 @@ QVector<int> wire::junctions() const
 
 QList<wire*> wire::connected_wires()
 {
-    return _connectedWires;
+    return m_connectedWires;
 }
 
 QList<line> wire::line_segments() const
@@ -57,7 +57,7 @@ QList<line> wire::line_segments() const
 
     QList<line> ret;
     for (int i = 0; i < points_count() - 1; i++) {
-        ret.append(line(_points.at(i).toPointF(), _points.at(i + 1).toPointF()));
+        ret.append(line(m_points.at(i).toPointF(), m_points.at(i + 1).toPointF()));
     }
 
     return ret;
@@ -71,7 +71,7 @@ void wire::move_junctions_to_new_segment(const line& oldSegment, const line& new
     }
 
     // Move connected junctions
-    for (const auto& wire: _connectedWires) {
+    for (const auto& wire: m_connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
             point point = wire->points().at(jIndex);
             // Check if the point is on the old segment
@@ -122,11 +122,11 @@ void wire::move_point_to(int index, const QPointF& moveTo)
     }
 
     // Move junctions that are on the point
-    for (const auto& wire: _connectedWires) {
+    for (const auto& wire: m_connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
             point point = wire->points().at(jIndex);
-            if ((_points[index]).toPoint() == point.toPoint()) {
-                wire->move_point_by(jIndex, QVector2D(moveTo - _points[index].toPointF()));
+            if ((m_points[index]).toPoint() == point.toPoint()) {
+                wire->move_point_by(jIndex, QVector2D(moveTo - m_points[index].toPointF()));
             }
         }
     }
@@ -146,8 +146,8 @@ void wire::move_point_to(int index, const QPointF& moveTo)
     }
 
     point wirepoint = moveTo;
-    wirepoint.set_is_junction(_points[index].is_junction());
-    _points[index] = wirepoint;
+    wirepoint.set_is_junction(m_points[index].is_junction());
+    m_points[index] = wirepoint;
 }
 
 /**
@@ -174,7 +174,7 @@ void wire::set_point_is_junction(int index, bool isJunction)
         return;
     }
 
-    _points[index].set_is_junction(isJunction);
+    m_points[index].set_is_junction(isJunction);
 
     has_changed();
 }
@@ -182,12 +182,12 @@ void wire::set_point_is_junction(int index, bool isJunction)
 void wire::prepend_point(const QPointF& point)
 {
     about_to_change();
-    _points.prepend(wire_system::point(point));
+    m_points.prepend(wire_system::point(point));
     has_changed();
 
     // Update junction
     if (points_count() >= 2) {
-        set_point_is_junction(0, _points.at(1).is_junction());
+        set_point_is_junction(0, m_points.at(1).is_junction());
         set_point_is_junction(1, false);
     }
 
@@ -197,12 +197,12 @@ void wire::prepend_point(const QPointF& point)
 void wire::append_point(const QPointF& point)
 {
     about_to_change();
-    _points.append(wire_system::point(point));
+    m_points.append(wire_system::point(point));
     has_changed();
 
     // Update junction
     if (points_count() > 2) {
-        set_point_is_junction(points_count() - 1, _points.at(points_count() - 2).is_junction());
+        set_point_is_junction(points_count() - 1, m_points.at(points_count() - 2).is_junction());
         set_point_is_junction(points_count() - 2, false);
     }
 
@@ -222,7 +222,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
     }
 
     // Move connected junctions
-    for (const auto& wire: _connectedWires) {
+    for (const auto& wire: m_connectedWires) {
         for (const auto& jIndex: wire->junctions()) {
             point point = wire->points().at(jIndex);
             line segment = line_segments().at(index);
@@ -264,21 +264,21 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
 
     // Move the line segment
     // Move point 1
-    move_point_to(index, _points[index] + moveBy.toPointF());
+    move_point_to(index, m_points[index] + moveBy.toPointF());
     // Move point 2
-    move_point_to(index + 1, _points[index + 1] + moveBy.toPointF());
+    move_point_to(index + 1, m_points[index + 1] + moveBy.toPointF());
 }
 
 void wire::add_segment(int index)
 {
     if (index == 0) {
         // Add a point
-        prepend_point(_points.first().toPointF());
+        prepend_point(m_points.first().toPointF());
         // Increment indices to account for inserted point
         index++;
     } else {
         // Add a point
-        append_point(_points.last().toPointF());
+        append_point(m_points.last().toPointF());
     }
 }
 
@@ -306,7 +306,7 @@ void wire::insert_point(int index, const QPointF& point)
     }
 
     about_to_change();
-    _points.insert(index, wire_system::point(m_manager->settings().snapToGrid(point)));
+    m_points.insert(index, wire_system::point(m_manager->settings().snapToGrid(point)));
     has_changed();
 
     m_manager->point_inserted(this, index);
@@ -383,7 +383,7 @@ void wire::move_point_by(int index, const QVector2D& moveBy)
             // Move junctions before the points are moved
             if (not line.is_null() and (line.is_horizontal() or line.is_vertical())) {
                 // Move connected junctions
-                for (const auto& wire: _connectedWires) {
+                for (const auto& wire: m_connectedWires) {
                     for (const auto& jIndex: wire->junctions()) {
                         const auto& point = wire->points().at(jIndex);
                         if (line.contains_point(point.toPointF())) {
@@ -423,7 +423,7 @@ void wire::move_point_by(int index, const QVector2D& moveBy)
             // Move junctions before the points are moved
             if (not line.is_null() and (line.is_horizontal() or line.is_vertical())) {
                 // Move connected junctions
-                for (const auto& wire: _connectedWires) {
+                for (const auto& wire: m_connectedWires) {
                     for (const auto& jIndex: wire->junctions()) {
                         const auto& point = wire->points().at(jIndex);
                         if (line.contains_point(point.toPointF())) {
@@ -498,7 +498,7 @@ void wire::move(const QVector2D& movedBy)
 
     // Move the points
     for (int index = 0; index < points_count(); index++) {
-        move_point_to(index, _points[index].toPointF() + movedBy.toPointF());
+        move_point_to(index, m_points[index].toPointF() + movedBy.toPointF());
     }
 }
 
@@ -516,7 +516,7 @@ void wire::remove_duplicate_points()
                 set_point_is_junction(i, p2.is_junction());
             }
             m_manager->point_removed(this, i + 1);
-            _points.removeAt(i+1);
+            m_points.removeAt(i + 1);
         } else {
             i++;
         }
@@ -531,16 +531,16 @@ void wire::remove_obsolete_points()
     }
 
     // Compile a list of obsolete points
-    auto it = _points.begin()+2;
-    while (it != _points.end()) {
+    auto it = m_points.begin() + 2;
+    while (it != m_points.end()) {
         QPointF p1 = (*(it - 2)).toPointF();
         QPointF p2 = (*(it - 1)).toPointF();
         QPointF p3 = (*it).toPointF();
 
         // Check if p2 is on the line created by p1 and p3
         if (Utils::pointIsOnLine(QLineF(p1, p2), p3)) {
-            m_manager->point_removed(this, _points.indexOf(*(it - 1)));
-            it = _points.erase(it-1);
+            m_manager->point_removed(this, m_points.indexOf(*(it - 1)));
+            it = m_points.erase(it - 1);
         }
         it++;
     }
@@ -556,26 +556,26 @@ void wire::simplify()
 
 bool wire::connect_wire(wire* wire)
 {
-    if (_connectedWires.contains(wire)) {
+    if (m_connectedWires.contains(wire)) {
         return false;
     }
-    _connectedWires.append(wire);
+    m_connectedWires.append(wire);
     return true;
 }
 
 void wire::setNet(const std::shared_ptr<wire_system::net>& net)
 {
-    _net = net;
+    m_net = net;
 }
 
 std::shared_ptr<wire_system::net> wire::net()
 {
-    return _net;
+    return m_net;
 }
 
 void wire::disconnectWire(wire* wire)
 {
-    _connectedWires.removeAll(wire);
+    m_connectedWires.removeAll(wire);
 }
 
 wire_manager* wire::manager()

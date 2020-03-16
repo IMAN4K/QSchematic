@@ -32,7 +32,7 @@ gpds::container WireNet::to_container() const
 {
     // Wires
     gpds::container wiresContainer;
-    for (const auto& wire : _wires) {
+    for (const auto& wire : m_wires) {
         if (auto wire_net = std::dynamic_pointer_cast<Wire>(wire.lock()))
         {
             wiresContainer.add_value("wire", wire_net->to_container());
@@ -41,7 +41,7 @@ gpds::container WireNet::to_container() const
 
     // Root
     gpds::container root;
-    root.add_value("name", _name.toStdString() );
+    root.add_value("name", m_name.toStdString() );
     // The coordinates of the label need to be in the scene space
     if (_label->parentItem()) {
         _label->moveBy(QVector2D(_label->parentItem()->pos()));
@@ -123,7 +123,7 @@ bool WireNet::removeWire(const std::shared_ptr<wire> wire)
 
 void WireNet::simplify()
 {
-    for (auto& wire : _wires) {
+    for (auto& wire : m_wires) {
         wire.lock()->simplify();
     }
 }
@@ -132,15 +132,15 @@ void WireNet::set_name(const QString& name)
 {
     net::set_name(name);
 
-    _label->setText(_name);
-    _label->setVisible(!_name.isEmpty());
+    _label->setText(m_name);
+    _label->setVisible(!m_name.isEmpty());
     updateLabelPos(true);
 }
 
 void WireNet::setHighlighted(bool highlighted)
 {
     // Wires
-    for (auto& wire : _wires) {
+    for (auto& wire : m_wires) {
         if (wire.expired()) {
             continue;
         }
@@ -205,7 +205,7 @@ QList<line> WireNet::lineSegments() const
 {
     QList<line> list;
 
-    for (const auto& wire : _wires) {
+    for (const auto& wire : m_wires) {
         if (wire.expired()) {
             continue;
         }
@@ -220,7 +220,7 @@ QList<QPointF> WireNet::points() const
 {
     QList<QPointF> list;
 
-    for (const auto& wire : _wires) {
+    for (const auto& wire : m_wires) {
         for (const auto& point : wire.lock()->points()) {
             list.append(point.toPointF());
         }
@@ -252,7 +252,7 @@ void WireNet::updateLabelPos(bool updateParent) const
     QPointF labelPos = _label->textRect().center() + _label->scenePos();
     QPointF closestPoint;
     std::shared_ptr<wire> closestWire;
-    for (const auto& wire : _wires) {
+    for (const auto& wire : m_wires) {
         std::shared_ptr<wire_system::wire> spWire = wire.lock();
         for (const auto& segment: spWire->line_segments()) {
             // Find closest point on segment

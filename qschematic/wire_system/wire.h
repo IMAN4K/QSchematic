@@ -42,7 +42,7 @@ namespace wire_system
         void move_line_segment_by(int index, const QVector2D& moveBy);
         wire_manager* manager();
 
-        QVector<point> _points;
+        QVector<point> m_points;
 
     private:
         void remove_duplicate_points();
@@ -50,8 +50,8 @@ namespace wire_system
         virtual void about_to_change();
         virtual void has_changed();
 
-        QList<wire*> _connectedWires;
-        std::shared_ptr<wire_system::net> _net;
+        QList<wire*> m_connectedWires;
+        std::shared_ptr<wire_system::net> m_net;
         wire_manager* m_manager;
     };
 }
