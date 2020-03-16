@@ -5,7 +5,7 @@
 #include <QGraphicsScene>
 #include <QUndoStack>
 #include <gpds/serialize.hpp>
-#include "wire_system/wiresystem.h"
+#include "wire_system/wiremanager.h"
 #include "settings.h"
 #include "items/item.h"
 #include "items/wire.h"
@@ -116,7 +116,7 @@ namespace QSchematic {
         // we're skipping that extra work now / ozra
         //
         // ItemUtils::ItemsCustodian<Item> _items;
-        // ItemUtils::ItemsCustodian<WireNet> _nets;
+        // ItemUtils::ItemsCustodian<WireNet> m_nets;
 
         Settings _settings;
         QPixmap _backgroundPixmap;

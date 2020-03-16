@@ -30,7 +30,7 @@ set(SOURCES_PRIVATE
     items/wire.cpp
     items/wirenet.cpp
     items/wireroundedcorners.cpp
-    wire_system/wiresystem.cpp
+        wire_system/wiremanager.cpp
     wire_system/wire.cpp
     wire_system/point.cpp
     wire_system/net.cpp
@@ -67,7 +67,7 @@ set(HEADERS_PUBLIC
     items/wireroundedcorners.h
     utils/itemscontainerutils.h
     utils/itemscustodian.h
-    wire_system/wiresystem.h
+        wire_system/wiremanager.h
     wire_system/wire.h
     wire_system/point.h
     wire_system/net.h

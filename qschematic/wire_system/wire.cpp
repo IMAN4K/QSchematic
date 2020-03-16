@@ -1,7 +1,7 @@
 #include <items/line.h>
 #include "wire.h"
 #include "net.h"
-#include "wiresystem.h"
+#include "wiremanager.h"
 #include <QVector2D>
 #include <QLineF>
 #include <utils.h>
@@ -248,7 +248,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
         int pointIndex = (index == 0) ? 0 : points_count() - 1;
 
         // Check if the segment is connected to a node
-        bool isConnected = m_manager->wire_point_is_attached(this, pointIndex);
+        bool isConnected = m_manager->point_is_attached(this, pointIndex);
 
         // Check if it's connected to a wire
         if (not isConnected and point.is_junction()) {

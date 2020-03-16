@@ -128,13 +128,13 @@ When the extremity of a wire is moved onto a connector it gets connected to it.
 This is implemented in `wire_manager::attach_wire_to_connector()`. There are quite
 a few places this has to be used.
 
-The most straightforward being in `wire_manager::wirePointMovedByUser()`. As
+The most straightforward being in `wire_manager::point_moved_by_user()`. As
 the name suggests, this method gets called whenever a point is moved by the
 user.
 
 In order to correctly connect wires when a new wire is created or when a
 `CommandItemRemove` is undone, the connections are also updated in
-`WireNet::addWire()`.
+`WireNet::add_wire()`.
 
 To connect wires while creating wires, `Scene::mousePressEvent()` also checks
 for connections.
@@ -152,27 +152,27 @@ point. This is done in `Scene::mouseReleaseEvent()` by calling
 ### Moving a point
 
 When a point is moved away or onto another wire they have to be connected or
-disconnected accordingly. This is done in `wire_manager::wirePointMovedByUser()`.
+disconnected accordingly. This is done in `wire_manager::point_moved_by_user()`.
 If two wires have to be connected it calls `wire_manager::connect_wire()` and if
-they have to be disconnected it calls `wire_manager::disconnectWire()`.
+they have to be disconnected it calls `wire_manager::disconnect_wire()`.
 
 ### Adding a wire
 
 When `CommandItemAdd::redo()` is called it checks if a wire has a previous net
 stored in `Wire::net()`. If there is already one, it makes sure that it's in
 the scene and adds the wire to it. If it has no previous net, a new net has
-to be created but this is delegated to the `wire_manager` by calling `addWire()`.
+to be created but this is delegated to the `wire_manager` by calling `add_wire()`.
 
 #### Undoing
 
-When the command is undone, it simply calls `wire_manager::removeWire()`.
+When the command is undone, it simply calls `wire_manager::remove_wire()`.
 
 ### Removing a wire
 
-When a wire is removed by a `CommandItemRemove`, `wire_manager::removeWire()`
+When a wire is removed by a `CommandItemRemove`, `wire_manager::remove_wire()`
 is called. This removes the wire from the scene, detaches it from every
 connector, disconnects it from all the wires it is attached to
-(`wire_manager::disconnectWire()`), removes it from its net and removes the net
+(`wire_manager::disconnect_wire()`), removes it from its net and removes the net
 from the scene if it was the last wire in it. The wire keeps a shared_ptr to
 the net, so that if the command is undone, it can be added to the same net.
 
@@ -187,16 +187,16 @@ added to the net which will
 When two wires from different nets are connected, we need to merge both nets.
 It will always use the net of the wire the other one is connecting to. The
 `wire_manager::connect_wire()` method will simply retrieve both nets and call
-`wire_manager::mergeNets()` that will then move all the wired from one net to
+`wire_manager::merge_nets()` that will then move all the wired from one net to
 the other.
 
 ### Disconnecting wires
 
-The `wire_manager::disconnectWire(std::shared_ptr<Wire> w1,
+The `wire_manager::disconnect_wire(std::shared_ptr<Wire> w1,
 std::shared_ptr<Wire> w2)` function disconnects a wire (w2) from another wire
-(w1). It first calls `w1->disconnectWire(w2)` so that w1 no longer considers
+(w1). It first calls `w1->disconnect_wire(w2)` so that w1 no longer considers
 w2 as being connected to it. Then, it calls
-`wire_manager::wiresConnectedTo(w1)` to get a list of all the wires that are
+`wire_manager::wires_connected_to(w1)` to get a list of all the wires that are
 connected to w1 or that w1 is connected to. If there are wires in the net
 that are not in that list, a new net has to be created and those wires must
 be moved to it. This makes sure that if the wire that is being disconnected

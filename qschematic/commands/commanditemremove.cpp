@@ -41,12 +41,12 @@ void CommandItemRemove::undo()
     if ( auto wire = std::dynamic_pointer_cast<Wire>(_item) ) {
         auto oldNet = wire->net();
         if (not _scene->wireSystem()->nets().contains(oldNet)) {
-            _scene->wireSystem()->addWireNet(wire->net());
+            _scene->wireSystem()->add_net(wire->net());
         }
 
         wire->net()->addWire(wire);
         for (int i = 0; i < wire->wirePointsRelative().count(); i++) {
-            _scene->wireSystem()->wirePointMovedByUser(*wire.get(), i);
+            _scene->wireSystem()->point_moved_by_user(*wire.get(), i);
         }
     }
 

@@ -34,7 +34,7 @@ Scene::Scene(QObject* parent) :
 
     // Wire system
     _wireSystem = std::make_shared<wire_system::wire_manager>();
-    connect(_wireSystem.get(), &wire_system::wire_manager::wirePointMoved, this, &Scene::wirePointMoved);
+    connect(_wireSystem.get(), &wire_system::wire_manager::wire_point_moved, this, &Scene::wirePointMoved);
 
     // Undo stack
     _undoStack = new QUndoStack;
@@ -142,7 +142,7 @@ void Scene::from_container(const gpds::container& container)
             net->setScene(this);
             net->from_container( *netContainer );
 
-            _wireSystem->addWireNet(net);
+            _wireSystem->add_net(net);
         }
     }
 
@@ -150,7 +150,7 @@ void Scene::from_container(const gpds::container& container)
     generateConnections();
 
     // Find junctions
-    _wireSystem->generateJunctions();
+    _wireSystem->generate_junctions();
 
     // Clear the undo history
     _undoStack->clear();
@@ -542,7 +542,7 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event)
                     continue;
                 }
                 if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
-                    _wireSystem->connectWire(wire.get(), _newWire.get());
+                    _wireSystem->connect_wire(wire.get(), _newWire.get());
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                     wireAttached = true;
                     break;
@@ -685,7 +685,7 @@ void Scene::updateNodeConnections(const Node* node) const
                         continue;
                     }
                     if (_wireSystem->attached_wire(connector) == wire.get() and
-                        _wireSystem->attachedWirepoint(otherConnector) == index) {
+                        _wireSystem->attached_point(otherConnector) == index) {
                         alreadyConnected = true;
                         break;
                     }
@@ -713,9 +713,9 @@ void Scene::wirePointMoved(wire& rawWire, int index)
                 continue;
             }
 
-            if (_wireSystem->attachedWirepoint(connector) == index) {
+            if (_wireSystem->attached_point(connector) == index) {
                 if (connector->scenePos().toPoint() != rawWire.points().at(index).toPoint()) {
-                    _wireSystem->detachWire(connector);
+                    _wireSystem->detach_wire(connector);
                 }
             }
         }
@@ -908,7 +908,7 @@ void Scene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
                     continue;
                 }
                 if (wire->point_is_on_wire(_newWire->pointsAbsolute().last())) {
-                    _wireSystem->connectWire(wire.get(), _newWire.get());
+                    _wireSystem->connect_wire(wire.get(), _newWire.get());
                     _newWire->set_point_is_junction(_newWire->pointsAbsolute().count() - 1, true);
                 }
             }
@@ -1067,7 +1067,7 @@ void Scene::setupNewItem(Item& item)
 void Scene::generateConnections()
 {
     for (const auto& connector : connectors()) {
-        std::shared_ptr<wire> wire = _wireSystem->wireWithExtremityAt(connector->scenePos());
+        std::shared_ptr<wire> wire = _wireSystem->wire_with_extremity_at(connector->scenePos());
         if (wire) {
             _wireSystem->attach_wire_to_connector(wire.get(), connector);
         }
@@ -1217,7 +1217,7 @@ void Scene::removeUnconnectedWires()
 
 bool Scene::addWire(const std::shared_ptr<Wire>& wire)
 {
-    if (not _wireSystem->addWire(wire)) {
+    if (not _wireSystem->add_wire(wire)) {
         return false;
     }
 
@@ -1241,11 +1241,11 @@ bool Scene::removeWire(const std::shared_ptr<Wire>& wire)
     // Disconnect from connectors
     for (const auto& connector: connectors()) {
         if (_wireSystem->attached_wire(connector) == wire.get()) {
-            _wireSystem->detachWire(connector);
+            _wireSystem->detach_wire(connector);
         }
     }
 
-    return _wireSystem->removeWire(wire);
+    return _wireSystem->remove_wire(wire);
 }
 
 

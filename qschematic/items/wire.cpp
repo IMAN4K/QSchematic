@@ -232,7 +232,7 @@ void Wire::updatePosition()
 //        item->setPos(item->pos() - topLeft);
 //    }
 //    QPointF newPos = pos() + topLeft;
-//    QPointF snappedPos = _settings.snapToGrid(newPos);
+//    QPointF snappedPos = m_settings.snapToGrid(newPos);
 //    _offset = newPos - snappedPos;
 //    _internalMove = true;
 //    setPos(newPos);
@@ -592,7 +592,7 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
             }
             // Move point onto the connector
             if (not isSelected and scene()->wireSystem()->attached_wire(conn) == this) {
-                int index = scene()->wireSystem()->attachedWirepoint(conn);
+                int index = scene()->wireSystem()->attached_point(conn);
                 QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
                 move_point_by(index, moveBy);
             }
