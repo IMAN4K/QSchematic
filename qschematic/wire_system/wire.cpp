@@ -1,10 +1,11 @@
-#include <wire_system/line.h>
 #include "wire.h"
+
+#include "line.h"
 #include "net.h"
 #include "wiremanager.h"
 #include <QVector2D>
 #include <QLineF>
-#include <utils.h>
+#include "../utils.h"
 
 using namespace wire_system;
 

@@ -1,13 +1,10 @@
 #include "wiremanager.h"
-//#include "items/connector.h" // TODO: Remove
-#include "items/wirenet.h" // TODO: Remove
 #include "net.h"
 #include "wire.h"
 #include "connectable.h"
 #include <QVector2D>
 
 using namespace wire_system;
-using namespace QSchematic;
 
 wire_manager::wire_manager()
 {
