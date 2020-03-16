@@ -26,7 +26,7 @@ namespace wire_system {
 
         QPointF toPointF() const;
         void set_is_junction(bool isJunction);
-        bool is_junction() const;
+        [[nodiscard]] bool is_junction() const;
 
     private:
         bool m_is_junction;

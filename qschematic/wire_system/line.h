@@ -15,16 +15,16 @@ namespace wire_system {
         line(const QPoint& p1, const QPoint& p2);
         line(const QPointF& p1, const QPointF& p2);
 
-        QPointF p1() const;
-        QPointF p2() const;
-        bool is_null() const;
-        bool is_horizontal() const;
-        bool is_vertical() const;
-        qreal lenght() const;
-        QPointF mid_point() const;
-        bool contains_point(const QPointF& point, qreal tolerance = 0) const;
-        QPointF point_on_line_closest_to(const QPointF& point);
-        QLineF toLineF() const;
+        [[nodiscard]] QPointF p1() const;
+        [[nodiscard]] QPointF p2() const;
+        [[nodiscard]] bool is_null() const;
+        [[nodiscard]] bool is_horizontal() const;
+        [[nodiscard]] bool is_vertical() const;
+        [[nodiscard]] qreal lenght() const;
+        [[nodiscard]] QPointF mid_point() const;
+        [[nodiscard]] bool contains_point(const QPointF& point, qreal tolerance = 0) const;
+        [[nodiscard]] QPointF point_on_line_closest_to(const QPointF& point);
+        [[nodiscard]] QLineF toLineF() const;
 
         static bool contains_point(const QLineF& line, const QPointF& point, qreal tolerance = 0);
 

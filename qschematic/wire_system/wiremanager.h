@@ -26,26 +26,26 @@ class wire_manager : public QObject
 public:
     wire_manager();
     void add_net(const std::shared_ptr<net> wireNet);
-    QList<std::shared_ptr<net>> nets() const;
-    QList<std::shared_ptr<wire>> wires() const;
+    [[nodiscard]] QList<std::shared_ptr<net>> nets() const;
+    [[nodiscard]] QList<std::shared_ptr<wire>> wires() const;
     void generate_junctions();
     void connect_wire(wire* wire, wire_system::wire* rawWire);
     void remove_net(std::shared_ptr<net> net);
     void clear();
-    bool remove_wire(const std::shared_ptr<wire> wire);
-    QVector<std::shared_ptr<wire>> wires_connected_to(const std::shared_ptr<wire>& wire) const;
+    [[nodiscard]] bool remove_wire(const std::shared_ptr<wire> wire);
+    [[nodiscard]] QVector<std::shared_ptr<wire>> wires_connected_to(const std::shared_ptr<wire>& wire) const;
     void disconnect_wire(const std::shared_ptr<wire_system::wire>& wire, wire_system::wire* otherWire);
-    bool add_wire(const std::shared_ptr<wire>& wire);
+    [[nodiscard]] bool add_wire(const std::shared_ptr<wire>& wire);
     void attach_wire_to_connector(wire* wire, int index, const connectable* connector);
     void attach_wire_to_connector(wire* wire, const connectable* connector);
-    wire* attached_wire(const connectable* connector);
-    int attached_point(const connectable* connector);
+    [[nodiscard]] wire* attached_wire(const connectable* connector);
+    [[nodiscard]] int attached_point(const connectable* connector);
     void detach_wire(const connectable* connector);
-    std::shared_ptr<wire> wire_with_extremity_at(const QPointF& point);
+    [[nodiscard]] std::shared_ptr<wire> wire_with_extremity_at(const QPointF& point);
     void point_inserted(const wire* wire, int index);
-    bool point_is_attached(wire_system::wire* wire, int index);
+    [[nodiscard]] bool point_is_attached(wire_system::wire* wire, int index);
     void set_settings(const Settings& settings);
-    Settings settings() const;
+    [[nodiscard]] Settings settings() const;
     void point_removed(const wire* wire, int index);
     void point_moved_by_user(wire& rawWire, int index);
     void set_net_factory(std::function<std::shared_ptr<net>()> func);
@@ -55,14 +55,10 @@ signals:
     void wire_point_moved(wire& wire, int index);
 
 private:
-    static bool merge_nets(std::shared_ptr<wire_system::net>& net, std::shared_ptr<wire_system::net>& otherNet);
+    [[nodiscard]] static bool merge_nets(std::shared_ptr<wire_system::net>& net, std::shared_ptr<wire_system::net>& otherNet);
 
-    void net_highlight_changed(bool highlighted);
-    QList<std::shared_ptr<net>> nets(const std::shared_ptr<net> wireNet) const;
-    void detach_wire(const std::shared_ptr<wire>& wire);
     void detach_wire_from_all(const wire* wire);
-    QList<const connectable*> connectors_attached_to_wire(const wire* wire);
-    std::shared_ptr<net> create_net();
+    [[nodiscard]] std::shared_ptr<net> create_net();
 
     QList<std::shared_ptr<net>> m_nets;
     Settings m_settings;

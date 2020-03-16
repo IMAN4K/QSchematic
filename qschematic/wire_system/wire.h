@@ -17,23 +17,23 @@ namespace wire_system
     public:
         wire();
         void set_manager(wire_manager* manager);
-        QVector<point> points() const;
-        int points_count() const;
-        QVector<int> junctions() const;
-        QList<wire*> connected_wires();
-        QList<line> line_segments() const;
+        [[nodiscard]] QVector<point> points() const;
+        [[nodiscard]] int points_count() const;
+        [[nodiscard]] QVector<int> junctions() const;
+        [[nodiscard]] QList<wire*> connected_wires();
+        [[nodiscard]] QList<line> line_segments() const;
         virtual void move_point_to(int index, const QPointF& moveTo);
         void set_point_is_junction(int index, bool isJunction);
         virtual void prepend_point(const QPointF& point);
         virtual void append_point(const QPointF& point);
         virtual void insert_point(int index, const QPointF& point);
         void move_point_by(int index, const QVector2D& moveBy);
-        bool point_is_on_wire(const QPointF& point) const;
+        [[nodiscard]] bool point_is_on_wire(const QPointF& point) const;
         void move(const QVector2D& movedBy);
         void simplify();
-        bool connect_wire(wire* wire);
+        [[nodiscard]] bool connect_wire(wire* wire);
         void setNet(const std::shared_ptr<wire_system::net>& net);
-        std::shared_ptr<wire_system::net> net();
+        [[nodiscard]] std::shared_ptr<wire_system::net> net();
         void disconnectWire(wire* wire);
 
     protected: // TODO: All these members should be private

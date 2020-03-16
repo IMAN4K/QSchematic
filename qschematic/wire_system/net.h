@@ -18,11 +18,11 @@ namespace wire_system
     public:
         void set_name(const std::string& name);
         virtual void set_name(const QString& name);
-        QString name() const;
-        QList<std::shared_ptr<wire>> wires() const;
-        virtual bool addWire(const std::shared_ptr<wire>& wire);
-        virtual bool removeWire(const std::shared_ptr<wire> wire);
-        bool contains(const std::shared_ptr<wire>& wire) const;
+        [[nodiscard]] QString name() const;
+        [[nodiscard]] QList<std::shared_ptr<wire>> wires() const;
+        [[nodiscard]] virtual bool addWire(const std::shared_ptr<wire>& wire);
+        [[nodiscard]] virtual bool removeWire(const std::shared_ptr<wire> wire);
+        [[nodiscard]] bool contains(const std::shared_ptr<wire>& wire) const;
         void set_manager(wire_system::wire_manager* manager);
 
     protected:

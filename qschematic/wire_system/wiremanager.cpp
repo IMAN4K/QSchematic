@@ -365,17 +365,6 @@ void wire_manager::point_removed(const wire* wire, int index)
     }
 }
 
-QList<const connectable*> wire_manager::connectors_attached_to_wire(const wire* wire)
-{
-    QList<const connectable*> connectors;
-    for (const auto& connector : m_connections.keys()) {
-        if (m_connections.value(connector).first == wire) {
-            connectors.append(connector);
-        }
-    }
-    return connectors;
-}
-
 void wire_manager::detach_wire(const connectable* connector)
 {
     const auto& wire = m_connections.value(connector).first;
