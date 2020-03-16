@@ -228,6 +228,8 @@ bool wire_manager::add_wire(const std::shared_ptr<wire>& wire)
         return false;
     }
 
+    wire->set_manager(this);
+
     // No point of the new wire lies on an existing line segment - create a new wire net
     auto newNet = create_net();
     newNet->addWire(wire);

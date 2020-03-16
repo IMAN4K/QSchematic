@@ -141,6 +141,7 @@ void Scene::from_container(const gpds::container& container)
 
             auto net = std::make_shared<WireNet>();
             net->setScene(this);
+            net->set_manager(wireSystem().get());
             net->from_container( *netContainer );
 
             _wireSystem->add_net(net);

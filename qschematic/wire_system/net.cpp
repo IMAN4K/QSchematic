@@ -53,6 +53,7 @@ bool net::addWire(const std::shared_ptr<wire>& wire)
     }
 
     wire->setNet(shared_from_this());
+    wire->set_manager(manager());
 
     // Add the wire
     m_wires.append(wire);
