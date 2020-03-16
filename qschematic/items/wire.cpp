@@ -37,7 +37,7 @@ public:
 };
 
 Wire::Wire(int type, QGraphicsItem* parent) :
-    Item(type, parent), _renameAction(nullptr), _internalMove(false)
+    Item(type, parent), _renameAction(nullptr)
 {
     _pointToMoveIndex = -1;
     _lineSegmentToMoveIndex = -1;
@@ -214,30 +214,6 @@ void Wire::calculateBoundingRect()
 
     // Create the rectangle
     _rect = QRectF(topLeft, bottomRight);
-    if (movingWirePoint() and not topLeft.isNull()) {
-        updatePosition();
-    }
-}
-
-void Wire::updatePosition()
-{
-// TODO: Not sure what has to be done here
-//    QPointF topLeft = _rect.topLeft();
-//    for (int i = 0; i < points_count(); i++) {
-//        _points[i].setX(_points[i].x() - topLeft.x());
-//        _points[i].setY(_points[i].y() - topLeft.y());
-//    }
-//    // Move all the child items
-//    for (auto& item : childItems()) {
-//        item->setPos(item->pos() - topLeft);
-//    }
-//    QPointF newPos = pos() + topLeft;
-//    QPointF snappedPos = m_settings.snapToGrid(newPos);
-//    _offset = newPos - snappedPos;
-//    _internalMove = true;
-//    setPos(newPos);
-//    _internalMove = false;
-//    calculateBoundingRect();
 }
 
 void Wire::setRenameAction(QAction* action)
@@ -571,9 +547,6 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
         return newPos;
     }
     case ItemPositionHasChanged:
-        if (_internalMove) {
-            break;
-        }
         if (not scene()) {
             break;
         }

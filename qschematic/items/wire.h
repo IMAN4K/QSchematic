@@ -40,7 +40,6 @@ namespace QSchematic {
         QVector<QPointF> pointsAbsolute() const;
         void move_point_to(int index, const QPointF& moveTo) override;
         bool movingWirePoint() const;
-        void updatePosition();
 
     signals:
         void pointMoved(Wire& wire, point& point);
@@ -73,7 +72,6 @@ namespace QSchematic {
         QPointF _prevMousePos;
         QPointF _offset;
         QAction* _renameAction;
-        bool _internalMove;
     };
 
 }

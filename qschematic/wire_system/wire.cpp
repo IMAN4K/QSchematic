@@ -176,7 +176,7 @@ void wire::set_point_is_junction(int index, bool isJunction)
 
     _points[index].set_is_junction(isJunction);
 
-    has_changed(); // TODO: Make sure this correctly redraws the wire
+    has_changed();
 }
 
 void wire::prepend_point(const QPointF& point)
@@ -253,7 +253,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
 
         // Check if it's connected to a wire
         if (not isConnected and point.is_junction()) {
-            isConnected = true; // TODO: Check why the IDE thinks this is never used
+            isConnected = true;
         }
 
         // Add segment if it is connected
