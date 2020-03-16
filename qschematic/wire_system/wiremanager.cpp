@@ -211,7 +211,7 @@ void wire_manager::disconnect_wire(const std::shared_ptr<wire_system::wire>& wir
     // If there are wires that are not in the list create a new net
     if (net->wires().count() != oldWires.count()) {
         // Create new net and add the wire
-        auto newNet = std::make_shared<WireNet>();
+        auto newNet = create_net();
         add_net(std::static_pointer_cast<wire_system::net>(newNet));
         for (auto wireToMove: net->wires()) {
             if (oldWires.contains(wireToMove)) {
@@ -231,7 +231,7 @@ bool wire_manager::add_wire(const std::shared_ptr<wire>& wire)
     }
 
     // No point of the new wire lies on an existing line segment - create a new wire net
-    auto newNet = std::make_shared<WireNet>();
+    auto newNet = create_net();
     newNet->addWire(wire);
     add_net(std::static_pointer_cast<wire_system::net>(newNet));
 
@@ -471,4 +471,18 @@ void wire_manager::set_settings(const Settings& settings)
 Settings wire_manager::settings() const
 {
     return m_settings;
+}
+
+void wire_manager::set_net_factory(std::function<std::shared_ptr<net>()> func)
+{
+    m_net_factory = func;
+}
+
+std::shared_ptr<net> wire_manager::create_net()
+{
+    if (m_net_factory.has_value()) {
+        return m_net_factory.value()();
+    } else {
+        return std::make_shared<net>();
+    }
 }

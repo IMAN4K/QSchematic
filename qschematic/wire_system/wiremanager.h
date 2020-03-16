@@ -47,6 +47,7 @@ public:
     Settings settings() const;
     void point_removed(const wire* wire, int index);
     void point_moved_by_user(wire& rawWire, int index);
+    void set_net_factory(std::function<std::shared_ptr<net>()> func);
 
 signals:
     void wire_point_moved(wire& wire, int index);
@@ -60,10 +61,12 @@ private:
     void detach_wire_from_all(const wire* wire);
     QList<std::shared_ptr<Connector>> connectors_attached_to_wire(const wire* wire);
     void connector_moved(const std::shared_ptr<Connector>& connector);
+    std::shared_ptr<net> create_net();
 
     QList<std::shared_ptr<net>> m_nets;
     Settings m_settings;
     QMap<std::shared_ptr<Connector>, QPair<wire*, int>> m_connections;
+    std::optional<std::function<std::shared_ptr<net>()>> m_net_factory;
 };
 
 }

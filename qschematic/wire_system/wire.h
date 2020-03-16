@@ -9,6 +9,7 @@ namespace wire_system
 {
     class wire_manager;
     class net;
+    class line;
 
     class wire
     {
