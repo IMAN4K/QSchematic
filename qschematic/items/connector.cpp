@@ -39,6 +39,7 @@ Connector::Connector(int type, const QPoint& gridPoint, const QString& text, QGr
 
     // Connections
     connect(this, &Connector::moved, [this]{ calculateTextDirection(); });
+    connect(this, &Connector::movedInScene, this, &Connector::notify_wire_manager);
 
     // Misc
     setGridPos(gridPoint);
@@ -353,4 +354,20 @@ void Connector::calculateTextDirection()
             }
         }
     }
+}
+
+QPointF Connector::position() const
+{
+    return scenePos();
+}
+
+void Connector::notify_wire_manager()
+{
+    // Ignore if it's not in a scene
+    if (not scene()) {
+        return;
+    }
+
+    // Notify the wire system when the connector moves
+    scene()->wireSystem()->connector_moved(this);
 }

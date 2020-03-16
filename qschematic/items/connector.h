@@ -1,13 +1,14 @@
 #pragma once
 
 #include "item.h"
+#include "wire_system/connectable.h"
 
 namespace QSchematic {
 
     class Label;
     class Wire;
 
-    class Connector : public Item
+    class Connector : public Item, public wire_system::connectable
     {
         Q_OBJECT
         Q_DISABLE_COPY(Connector)
@@ -44,12 +45,16 @@ namespace QSchematic {
         virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override;
         virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
 
+        // Connectable
+        QPointF position() const override;
+
     protected:
         void copyAttributes(Connector& dest) const;
 
     private:
         void calculateSymbolRect();
         void calculateTextDirection();
+        void notify_wire_manager();
 
         SnapPolicy _snapPolicy;
         QRectF _symbolRect;

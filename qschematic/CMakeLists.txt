@@ -71,6 +71,7 @@ set(HEADERS_PUBLIC
     wire_system/wire.h
     wire_system/point.h
     wire_system/net.h
+    wire_system/connectable.h
     netlist.h
     netlistgenerator.h
     scene.h

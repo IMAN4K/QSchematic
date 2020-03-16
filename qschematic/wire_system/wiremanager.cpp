@@ -1,8 +1,9 @@
 #include "wiremanager.h"
-#include "items/connector.h" // TODO: Remove
+//#include "items/connector.h" // TODO: Remove
 #include "items/wirenet.h" // TODO: Remove
 #include "net.h"
 #include "wire.h"
+#include "connectable.h"
 #include <QVector2D>
 
 using namespace wire_system;
@@ -294,7 +295,7 @@ void wire_manager::point_moved_by_user(wire& rawWire, int index)
     }
 }
 
-void wire_manager::attach_wire_to_connector(wire* wire, int index, const std::shared_ptr<Connector>& connector)
+void wire_manager::attach_wire_to_connector(wire* wire, int index, const connectable* connector)
 {
     if (not wire or not connector) {
         return;
@@ -311,25 +312,21 @@ void wire_manager::attach_wire_to_connector(wire* wire, int index, const std::sh
     }
 
     m_connections.insert(connector, {wire, index });
-
-    // Move the wire when the connector or its parent node moves
-    connect(connector.get(), &Connector::movedInScene, this, [=, connector = connector.get()] {
-        connector_moved(connector->sharedPtr<Connector>()); });
 }
 
 /**
  * Connects a wire to a connector and finds out with end should be connected.
  * \remark If the connector is not on one of the ends, it does nothing
  */
-void wire_manager::attach_wire_to_connector(wire* wire, const std::shared_ptr<Connector>& connector)
+void wire_manager::attach_wire_to_connector(wire* wire, const connectable* connector)
 {
     // Check if it's the first point
-    if (wire->points().first().toPoint() == connector->scenePos().toPoint()) {
+    if (wire->points().first().toPoint() == connector->position().toPoint()) {
         attach_wire_to_connector(wire, 0, connector);
     }
 
     // Check if it's the last point
-    else if (wire->points().last().toPoint() == connector->scenePos().toPoint()) {
+    else if (wire->points().last().toPoint() == connector->position().toPoint()) {
         attach_wire_to_connector(wire, wire->points().count() - 1, connector);
     }
 }
@@ -371,9 +368,9 @@ void wire_manager::point_removed(const wire* wire, int index)
     }
 }
 
-QList<std::shared_ptr<Connector>> wire_manager::connectors_attached_to_wire(const wire* wire)
+QList<const connectable*> wire_manager::connectors_attached_to_wire(const wire* wire)
 {
-    QList<std::shared_ptr<Connector>> connectors;
+    QList<const connectable*> connectors;
     for (const auto& connector : m_connections.keys()) {
         if (m_connections.value(connector).first == wire) {
             connectors.append(connector);
@@ -382,7 +379,7 @@ QList<std::shared_ptr<Connector>> wire_manager::connectors_attached_to_wire(cons
     return connectors;
 }
 
-void wire_manager::detach_wire(const std::shared_ptr<Connector>& connector)
+void wire_manager::detach_wire(const connectable* connector)
 {
     const auto& wire = m_connections.value(connector).first;
     m_connections.remove(connector);
@@ -413,7 +410,7 @@ void wire_manager::detach_wire_from_all(const wire* wire)
     }
 }
 
-wire* wire_manager::attached_wire(const std::shared_ptr<Connector>& connector)
+wire* wire_manager::attached_wire(const connectable* connector)
 {
     if (not m_connections.contains(connector)) {
         return nullptr;
@@ -421,7 +418,7 @@ wire* wire_manager::attached_wire(const std::shared_ptr<Connector>& connector)
     return m_connections.value(connector).first;
 }
 
-int wire_manager::attached_point(const std::shared_ptr<Connector>& connector)
+int wire_manager::attached_point(const connectable* connector)
 {
     if (not m_connections.contains(connector)) {
         return -1;
@@ -429,7 +426,7 @@ int wire_manager::attached_point(const std::shared_ptr<Connector>& connector)
     return m_connections.value(connector).second;
 }
 
-void wire_manager::connector_moved(const std::shared_ptr<Connector>& connector)
+void wire_manager::connector_moved(const connectable* connector)
 {
     if (not m_connections.contains(connector)) {
         return;
@@ -441,7 +438,7 @@ void wire_manager::connector_moved(const std::shared_ptr<Connector>& connector)
     }
 
     QPointF oldPos = wirePoint.first->points().at(wirePoint.second).toPointF();
-    QVector2D moveBy = QVector2D(connector->scenePos() - oldPos);
+    QVector2D moveBy = QVector2D(connector->position() - oldPos);
     if (not moveBy.isNull()) {
         wirePoint.first->move_point_by(wirePoint.second, moveBy);
     }
