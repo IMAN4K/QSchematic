@@ -87,3 +87,8 @@ void net::set_manager(wire_manager* manager)
 {
     m_manager = manager;
 }
+
+wire_manager* net::manager() const
+{
+    return m_manager;
+}

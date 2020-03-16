@@ -32,8 +32,8 @@ gpds::container WireNet::to_container() const
 {
     // Wires
     gpds::container wiresContainer;
-    for (const auto& wire : m_wires) {
-        if (auto wire_net = std::dynamic_pointer_cast<Wire>(wire.lock()))
+    for (const auto& wire : wires()) {
+        if (auto wire_net = std::dynamic_pointer_cast<Wire>(wire))
         {
             wiresContainer.add_value("wire", wire_net->to_container());
         }
@@ -41,7 +41,7 @@ gpds::container WireNet::to_container() const
 
     // Root
     gpds::container root;
-    root.add_value("name", m_name.toStdString() );
+    root.add_value("name", name().toStdString() );
     // The coordinates of the label need to be in the scene space
     if (_label->parentItem()) {
         _label->moveBy(QVector2D(_label->parentItem()->pos()));
@@ -123,8 +123,8 @@ bool WireNet::removeWire(const std::shared_ptr<wire> wire)
 
 void WireNet::simplify()
 {
-    for (auto& wire : m_wires) {
-        wire.lock()->simplify();
+    for (auto& wire : wires()) {
+        wire->simplify();
     }
 }
 
@@ -132,20 +132,20 @@ void WireNet::set_name(const QString& name)
 {
     net::set_name(name);
 
-    _label->setText(m_name);
-    _label->setVisible(!m_name.isEmpty());
+    _label->setText(this->name());
+    _label->setVisible(!this->name().isEmpty());
     updateLabelPos(true);
 }
 
 void WireNet::setHighlighted(bool highlighted)
 {
     // Wires
-    for (auto& wire : m_wires) {
-        if (wire.expired()) {
+    for (auto& wire : wires()) {
+        if (not wire) {
             continue;
         }
 
-        if (auto wire_item = std::dynamic_pointer_cast<Wire>(wire.lock())) {
+        if (auto wire_item = std::dynamic_pointer_cast<Wire>(wire)) {
             wire_item->setHighlighted(highlighted);
         }
     }
@@ -163,7 +163,7 @@ QList<std::shared_ptr<WireNet>> WireNet::nets() const
 {
     QList<std::shared_ptr<WireNet>> list;
 
-    for (auto& net : m_manager->nets()) {
+    for (auto& net : manager()->nets()) {
         if (!net) {
             continue;
         }
@@ -205,12 +205,12 @@ QList<line> WireNet::lineSegments() const
 {
     QList<line> list;
 
-    for (const auto& wire : m_wires) {
-        if (wire.expired()) {
+    for (const auto& wire : wires()) {
+        if (not wire) {
             continue;
         }
 
-        list.append(wire.lock()->line_segments());
+        list.append(wire->line_segments());
     }
 
     return list;
@@ -220,8 +220,8 @@ QList<QPointF> WireNet::points() const
 {
     QList<QPointF> list;
 
-    for (const auto& wire : m_wires) {
-        for (const auto& point : wire.lock()->points()) {
+    for (const auto& wire : wires()) {
+        for (const auto& point : wire->points()) {
             list.append(point.toPointF());
         }
     }
@@ -252,16 +252,15 @@ void WireNet::updateLabelPos(bool updateParent) const
     QPointF labelPos = _label->textRect().center() + _label->scenePos();
     QPointF closestPoint;
     std::shared_ptr<wire> closestWire;
-    for (const auto& wire : m_wires) {
-        std::shared_ptr<wire_system::wire> spWire = wire.lock();
-        for (const auto& segment: spWire->line_segments()) {
+    for (const auto& wire : wires()) {
+        for (const auto& segment: wire->line_segments()) {
             // Find closest point on segment
             QPointF p = Utils::pointOnLineClosestToPoint(segment.p1(), segment.p2(), labelPos);
             float distance1 = QVector2D(labelPos - closestPoint).lengthSquared();
             float distance2 = QVector2D(labelPos - p).lengthSquared();
             if (closestPoint.isNull() or distance1 > distance2) {
                 closestPoint = p;
-                closestWire = spWire;
+                closestWire = wire;
             }
         }
     }
