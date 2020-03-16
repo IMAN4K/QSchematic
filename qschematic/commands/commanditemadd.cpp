@@ -55,8 +55,8 @@ void CommandItemAdd::redo()
     auto wire = std::dynamic_pointer_cast<Wire>(_item);
     if (wire) {
         if (wire->net()) {
-            if (not _scene->wireSystem()->nets().contains(wire->net())) {
-                _scene->wireSystem()->add_net(wire->net());
+            if (not _scene->wire_manager()->nets().contains(wire->net())) {
+                _scene->wire_manager()->add_net(wire->net());
             }
             wire->net()->addWire(wire);
             _scene->addItem(wire);
@@ -64,7 +64,7 @@ void CommandItemAdd::redo()
             _scene->addWire(wire);
         }
         for (int i = 0; i < wire->wirePointsRelative().count(); i++) {
-            _scene->wireSystem()->point_moved_by_user(*wire.get(), i);
+            _scene->wire_manager()->point_moved_by_user(*wire.get(), i);
         }
     }
 

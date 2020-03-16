@@ -75,7 +75,7 @@ void FancyWire::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setBrush(brush);
 
     for (const auto& connector: scene()->connectors()) {
-        if (scene()->wireSystem()->attached_wire(connector.get()) == this) {
+        if (scene()->wire_manager()->attached_wire(connector.get()) == this) {
             painter->drawEllipse(mapFromScene(connector->scenePos()), SIZE, SIZE);
         }
     }

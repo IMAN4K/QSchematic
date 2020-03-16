@@ -369,5 +369,5 @@ void Connector::notify_wire_manager()
     }
 
     // Notify the wire system when the connector moves
-    scene()->wireSystem()->connector_moved(this);
+    scene()->wire_manager()->connector_moved(this);
 }

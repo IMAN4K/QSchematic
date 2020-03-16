@@ -57,7 +57,7 @@ namespace QSchematic {
         QList<std::shared_ptr<Node>> nodes() const;
         QList<QPointF> connectionPoints() const;
         QList<std::shared_ptr<Connector>> connectors() const;
-        std::shared_ptr<wire_system::wire_manager> wireSystem() const;
+        std::shared_ptr<wire_system::wire_manager> wire_manager() const;
         void itemHoverEnter(const std::shared_ptr<const Item>& item);
         void itemHoverLeave(const std::shared_ptr<const Item>& item);
         void removeLastWirePoint();
@@ -130,7 +130,7 @@ namespace QSchematic {
         QMap<std::shared_ptr<Item>, QPointF> _initialItemPositions;
         QPointF _initialCursorPosition;
         QUndoStack* _undoStack;
-        std::shared_ptr<wire_system::wire_manager> _wireSystem;
+        std::shared_ptr<wire_system::wire_manager> m_wire_manager;
         Item* _highlightedItem;
 
     private slots:
