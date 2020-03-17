@@ -6,6 +6,8 @@ find_package(Qt5
         Gui
         Widgets)
 
+add_subdirectory(test)
+
 set(SOURCES_PRIVATE
     line.cpp
     wiremanager.cpp
@@ -13,6 +15,7 @@ set(SOURCES_PRIVATE
     point.cpp
     net.cpp
     ../utils.cpp
+    ../settings.cpp
 )
 
 set(HEADERS_PUBLIC
