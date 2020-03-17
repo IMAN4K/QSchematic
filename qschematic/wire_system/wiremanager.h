@@ -32,10 +32,10 @@ public:
     void connect_wire(wire* wire, wire_system::wire* rawWire);
     void remove_net(std::shared_ptr<net> net);
     void clear();
-    [[nodiscard]] bool remove_wire(const std::shared_ptr<wire> wire);
+    bool remove_wire(const std::shared_ptr<wire> wire);
     [[nodiscard]] QVector<std::shared_ptr<wire>> wires_connected_to(const std::shared_ptr<wire>& wire) const;
     void disconnect_wire(const std::shared_ptr<wire_system::wire>& wire, wire_system::wire* otherWire);
-    [[nodiscard]] bool add_wire(const std::shared_ptr<wire>& wire);
+    bool add_wire(const std::shared_ptr<wire>& wire);
     void attach_wire_to_connector(wire* wire, int index, const connectable* connector);
     void attach_wire_to_connector(wire* wire, const connectable* connector);
     [[nodiscard]] wire* attached_wire(const connectable* connector);
