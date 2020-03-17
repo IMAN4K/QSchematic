@@ -600,3 +600,28 @@ wire_manager* wire::manager()
     return m_manager;
 }
 
+void wire::remove_point(int index)
+{
+    about_to_change();
+    // Move the junction on the previous and next segments
+    if (index > 0 and index < points_count() - 1) {
+        line newSegment(points().at(index - 1).toPointF(), points().at(index + 1).toPointF());
+        move_junctions_to_new_segment(line_segments().at(index - 1), newSegment);
+        move_junctions_to_new_segment(line_segments().at(index), newSegment);
+    } else {
+        for (const auto& wire: connected_wires()) {
+            for (int junctionIndex: wire->junctions()) {
+                QPointF point = wire->points().at(junctionIndex).toPointF();
+                if (line_segments().first().contains_point(point)) {
+                    wire->move_point_to(junctionIndex, points().at(1).toPointF());
+                }
+                if (line_segments().last().contains_point(point)) {
+                    wire->move_point_to(junctionIndex, points().at(points_count() - 2).toPointF());
+                }
+            }
+        }
+    }
+    m_points.remove(index);
+    has_changed();
+    manager()->point_removed(this, index);
+}

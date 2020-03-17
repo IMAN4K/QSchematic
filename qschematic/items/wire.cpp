@@ -260,32 +260,6 @@ void Wire::removeLastPoint()
     calculateBoundingRect();
 }
 
-void Wire::removePoint(int index)
-{
-    prepareGeometryChange();
-    // Move the junction on the previous and next segments
-    if (index > 0 and index < points_count() - 1) {
-        line newSegment(pointsAbsolute().at(index - 1), pointsAbsolute().at(index + 1));
-        move_junctions_to_new_segment(line_segments().at(index - 1), newSegment);
-        move_junctions_to_new_segment(line_segments().at(index), newSegment);
-    } else {
-        for (const auto& wire: connected_wires()) {
-            for (int junctionIndex: wire->junctions()) {
-                QPointF point = wire->points().at(junctionIndex).toPointF();
-                if (line_segments().first().contains_point(point)) {
-                    wire->move_point_to(junctionIndex, pointsAbsolute().at(1));
-                }
-                if (line_segments().last().contains_point(point)) {
-                    wire->move_point_to(junctionIndex, pointsAbsolute().at(pointsAbsolute().count() - 2));
-                }
-            }
-        }
-    }
-    m_points.remove(index);
-    calculateBoundingRect();
-    manager()->point_removed(this, index);
-}
-
 void Wire::move_point_to(int index, const QPointF& moveTo)
 {
     prepareGeometryChange();
@@ -634,7 +608,7 @@ void Wire::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
 
     // Remove the point near the cursor
     if (actionRemove and command == actionRemove) {
-        removePoint(pointIndex);
+        remove_point(pointIndex);
     }
 
     // Move the label to the cursor if it was just made visible

@@ -36,6 +36,7 @@ namespace wire_system
         [[nodiscard]] std::shared_ptr<wire_system::net> net();
         void disconnectWire(wire* wire);
         virtual void add_segment(int index);
+        void remove_point(int index);
 
     protected:
         void move_junctions_to_new_segment(const line& oldSegment, const line& newSegment);
