@@ -623,5 +623,7 @@ void wire::remove_point(int index)
     }
     m_points.remove(index);
     has_changed();
-    manager()->point_removed(this, index);
+    if (m_manager) {
+        m_manager->point_removed(this, index);
+    }
 }

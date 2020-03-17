@@ -27,6 +27,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/doctest-src/doctest)
 SET(TESTS
 	tests/manager.cpp
 	tests/nets.cpp
+	tests/wire.cpp
 )
 
 # Build test application
