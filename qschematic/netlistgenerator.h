@@ -43,7 +43,7 @@ namespace QSchematic
                 auto wireNet = std::dynamic_pointer_cast<WireNet>(net);
 
                 // Sanity check
-                if (wireNet) {
+                if (not wireNet) {
                     continue;
                 }
 
