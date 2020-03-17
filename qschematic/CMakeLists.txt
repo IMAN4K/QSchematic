@@ -79,7 +79,7 @@ find_package(Qt5
         Widgets)
 
 # Include GPDS package
-find_package(Gpds 0.1.0 REQUIRED)
+find_package(gpds 0.1.0 REQUIRED)
 
 # Add the wire system
 add_subdirectory(wire_system)
