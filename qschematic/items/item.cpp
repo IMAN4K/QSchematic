@@ -27,7 +27,13 @@ Item::Item(int type, QGraphicsItem* parent) :
     connect(this, &Item::xChanged, this, &Item::posChanged);
     connect(this, &Item::yChanged, this, &Item::posChanged);
     connect(this, &Item::rotationChanged, this, &Item::rotChanged);
+
+    // Connect signals to parent item
     Item* parentItem = static_cast<Item*>(parent);
+    if (parentItem) {
+        connect(parentItem, &Item::moved, this, &Item::scenePosChanged);
+        connect(parentItem, &Item::rotated, this, &Item::scenePosChanged);
+    }
 }
 
 Item::~Item()
