@@ -465,9 +465,12 @@ void wire_manager::set_net_factory(std::function<std::shared_ptr<net>()> func)
 
 std::shared_ptr<net> wire_manager::create_net()
 {
+    std::shared_ptr<net> net;
     if (m_net_factory.has_value()) {
-        return m_net_factory.value()();
+        net = m_net_factory.value()();
     } else {
-        return std::make_shared<net>();
+        net = std::make_shared<class net>();
     }
+    net->set_manager(this);
+    return net;
 }

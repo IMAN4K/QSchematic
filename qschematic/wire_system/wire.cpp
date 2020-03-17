@@ -206,7 +206,9 @@ void wire::append_point(const QPointF& point)
         set_point_is_junction(points_count() - 2, false);
     }
 
-    m_manager->point_inserted(this, points_count() - 1);
+    if (m_manager) {
+        m_manager->point_inserted(this, points_count() - 1);
+    }
 }
 
 void wire::move_line_segment_by(int index, const QVector2D& moveBy)
@@ -249,7 +251,7 @@ void wire::move_line_segment_by(int index, const QVector2D& moveBy)
         int pointIndex = (index == 0) ? 0 : points_count() - 1;
 
         // Check if the segment is connected to a node
-        bool isConnected = m_manager->point_is_attached(this, pointIndex);
+        bool isConnected = m_manager and m_manager->point_is_attached(this, pointIndex);
 
         // Check if it's connected to a wire
         if (not isConnected and point.is_junction()) {
@@ -306,15 +308,26 @@ void wire::insert_point(int index, const QPointF& point)
     }
 
     about_to_change();
-    m_points.insert(index, wire_system::point(m_manager->settings().snapToGrid(point)));
+    if (m_manager) {
+        m_points.insert(index, wire_system::point(m_manager->settings().snapToGrid(point)));
+    } else {
+        m_points.insert(index, point);
+    }
     has_changed();
 
-    m_manager->point_inserted(this, index);
+    if (m_manager) {
+        m_manager->point_inserted(this, index);
+    }
 }
 
 void wire::move_point_by(int index, const QVector2D& moveBy)
 {
     if (index < 0 or index > points_count() - 1) {
+        return;
+    }
+
+    if (not m_manager) {
+        move_point_to(index, points().at(index).toPointF() + moveBy.toPointF());
         return;
     }
 
@@ -476,7 +489,7 @@ void wire::move(const QVector2D& movedBy)
     // Move junctions
     for (const auto& index : junctions()) {
         const auto& junction = points().at(index);
-        for (const auto& wire : m_manager->wires()) {
+        for (const auto& wire : net()->wires()) {
             if (not wire->connected_wires().contains(this)) {
                 continue;
             }
@@ -515,7 +528,9 @@ void wire::remove_duplicate_points()
             if (!p1.is_junction()) {
                 set_point_is_junction(i, p2.is_junction());
             }
-            m_manager->point_removed(this, i + 1);
+            if (m_manager) {
+                m_manager->point_removed(this, i + 1);
+            }
             m_points.removeAt(i + 1);
         } else {
             i++;
@@ -539,7 +554,9 @@ void wire::remove_obsolete_points()
 
         // Check if p2 is on the line created by p1 and p3
         if (Utils::pointIsOnLine(QLineF(p1, p2), p3)) {
-            m_manager->point_removed(this, m_points.indexOf(*(it - 1)));
+            if (m_manager) {
+                m_manager->point_removed(this, m_points.indexOf(*(it - 1)));
+            }
             it = m_points.erase(it - 1);
         }
         it++;
