@@ -1,5 +1,5 @@
 #include "3rdparty/doctest.h"
-#include "line.h"
+#include "wire_system/line.h"
 
 TEST_SUITE("Line")
 {

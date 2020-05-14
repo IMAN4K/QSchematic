@@ -1,7 +1,7 @@
 #include "3rdparty/doctest.h"
-#include "manager.h"
-#include "wire.h"
-#include "net.h"
+#include "wire_system/manager.h"
+#include "wire_system/wire.h"
+#include "wire_system/net.h"
 
 TEST_SUITE("Net")
 {
