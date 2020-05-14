@@ -74,6 +74,11 @@ TEST_SUITE("Wire")
         wire2->append_point(QPointF(15, 10));
         manager.add_wire(wire2);
 
+        // Create a connector
+        connector conn;
+        conn.pos = QPointF(0, 10);
+        manager.attach_wire_to_connector(wire1.get(), 0, &conn);
+
         // Generate the junctions
         manager.generate_junctions();
 
@@ -81,8 +86,8 @@ TEST_SUITE("Wire")
         wire1->move(QVector2D(1, -1));
 
         // Make sure the first wire has moved correctly
-        REQUIRE(wire1->points().at(0).toPointF() == QPointF(1, 9));
-        REQUIRE(wire1->points().at(1).toPointF() == QPointF(6, 9));
+        REQUIRE(wire1->points().at(0).toPointF() == QPointF(0, 10));
+        REQUIRE(wire1->points().at(1).toPointF() == QPointF(6, 10));
         REQUIRE(wire1->points().at(2).toPointF() == QPointF(6, 4));
         REQUIRE(wire1->points().at(3).toPointF() == QPointF(16, 4));
 
@@ -95,8 +100,8 @@ TEST_SUITE("Wire")
         wire2->move(QVector2D(2, 1));
 
         // Make sure the first wire hasn't changed
-        REQUIRE(wire1->points().at(0).toPointF() == QPointF(1, 9));
-        REQUIRE(wire1->points().at(1).toPointF() == QPointF(6, 9));
+        REQUIRE(wire1->points().at(0).toPointF() == QPointF(0, 10));
+        REQUIRE(wire1->points().at(1).toPointF() == QPointF(6, 10));
         REQUIRE(wire1->points().at(2).toPointF() == QPointF(6, 4));
         REQUIRE(wire1->points().at(3).toPointF() == QPointF(16, 4));
 
@@ -104,6 +109,71 @@ TEST_SUITE("Wire")
         REQUIRE(wire2->points().at(0).toPointF() == QPointF(11, 4));
         REQUIRE(wire2->points().at(1).toPointF() == QPointF(11, 11));
         REQUIRE(wire2->points().at(2).toPointF() == QPointF(17, 11));
+    }
+
+    TEST_CASE("Move wire")
+    {
+        wire_system::manager manager;
+        // Use a grid size of 1
+        Settings settings = manager.settings();
+        settings.gridSize = 1;
+        manager.set_settings(settings);
+
+        qDebug() << manager.wires().count();
+
+        // Create a wire
+        auto wire1 = std::make_shared<wire_system::wire>();
+        wire1->append_point(QPointF(0, 5));
+        wire1->append_point(QPointF(5, 5));
+        wire1->append_point(QPointF(5, 0));
+        wire1->append_point(QPointF(10, 0));
+        manager.add_wire(wire1);
+
+        // Create a second wire
+        auto wire2 = std::make_shared<wire_system::wire>();
+        wire2->append_point(QPointF(5, 4));
+        wire2->append_point(QPointF(10, 4));
+        wire2->append_point(QPointF(10, 9));
+        wire2->append_point(QPointF(15, 9));
+        manager.add_wire(wire2);
+
+        // Create a connector
+        connector conn;
+        conn.pos = QPointF(0, 5);
+        manager.attach_wire_to_connector(wire1.get(), 0, &conn);
+
+        // Generate the junctions
+        manager.generate_junctions();
+
+        // Move the first wire
+        wire1->move(QVector2D(0, 2));
+        REQUIRE(wire2->points().at(0).toPointF() == QPointF(5, 6));
+        REQUIRE(wire2->points().at(1).toPointF() == QPointF(10, 6));
+        REQUIRE(wire2->points().at(2).toPointF() == QPointF(10, 9));
+        REQUIRE(wire2->points().at(3).toPointF() == QPointF(15, 9));
+//        qDebug() << wire2->points().at(0).toPointF();
+//        qDebug() << wire2->points().at(1).toPointF();
+//        qDebug() << wire2->points().at(2).toPointF();
+//        qDebug() << wire2->points().at(3).toPointF();
+        wire2->move(QVector2D(0, 2));
+//        conn.pos += QPointF(0, 2);
+//        manager.connector_moved(&conn);
+
+        // Make sure the first wire has moved correctly
+        REQUIRE(wire1->points().at(0).toPointF() == QPointF(0, 5));
+        REQUIRE(wire1->points().at(1).toPointF() == QPointF(5, 5));
+        REQUIRE(wire1->points().at(2).toPointF() == QPointF(5, 2));
+        REQUIRE(wire1->points().at(3).toPointF() == QPointF(10, 2));
+
+        // Make sure the second wire stayed on the first one
+        qDebug() << wire2->points().at(0).toPointF();
+        qDebug() << wire2->points().at(1).toPointF();
+        qDebug() << wire2->points().at(2).toPointF();
+        qDebug() << wire2->points().at(3).toPointF();
+        REQUIRE(wire2->points().at(0).toPointF() == QPointF(5, 5));
+        REQUIRE(wire2->points().at(1).toPointF() == QPointF(10, 6));
+        REQUIRE(wire2->points().at(2).toPointF() == QPointF(10, 11));
+        REQUIRE(wire2->points().at(3).toPointF() == QPointF(15, 11));
     }
 
     TEST_CASE("point_is_on_wire()")

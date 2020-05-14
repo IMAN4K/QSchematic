@@ -52,6 +52,7 @@ public:
     void point_moved_by_user(wire& rawWire, int index);
     void set_net_factory(std::function<std::shared_ptr<net>()> func);
     void connector_moved(const connectable* connector);
+    const connectable* connectable_attached_to_point(wire* wire, int point) const;
 
 signals:
     void wire_point_moved(wire& wire, int index);

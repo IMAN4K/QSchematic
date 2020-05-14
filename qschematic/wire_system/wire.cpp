@@ -5,6 +5,7 @@
 #include "manager.h"
 #include <QVector2D>
 #include <QLineF>
+#include "connectable.h"
 #include "../utils.h"
 
 using namespace wire_system;
@@ -75,7 +76,7 @@ void wire::move_junctions_to_new_segment(const line& oldSegment, const line& new
         for (const auto& jIndex: wire->junctions()) {
             point point = wire->points().at(jIndex);
             // Check if the point is on the old segment
-            if (oldSegment.contains_point(point.toPoint(), 5)) {
+            if (oldSegment.contains_point(point.toPoint(), 0)) {
                 line junctionSeg;
                 // Find out if one of the segments is horizontal or vertical
                 if (jIndex < wire->points().count() - 1) {
@@ -516,6 +517,32 @@ void wire::move(const QVector2D& movedBy)
     for (int index = 0; index < points_count(); index++) {
         move_point_to(index, m_points[index].toPointF() + movedBy.toPointF());
     }
+
+    if (auto connectable = m_manager->connectable_attached_to_point(this, 0)) {
+        move_point_by(0, QVector2D(connectable->position() - m_points.first().toPointF()));
+    }
+    if (auto connectable = m_manager->connectable_attached_to_point(this, points_count() - 1)) {
+        move_point_by(points_count() - 1, QVector2D(connectable->position() - m_points.last().toPointF()));
+    }
+//        for (const auto& conn : scene()->connectors()) {
+//            bool isSelected = false;
+//            // Check if the connector's node is selected
+//            for (const auto& item : scene()->selectedTopLevelItems()) {
+//                auto node = item->sharedPtr<Node>();
+//                if (node) {
+//                    if (node->connectors().contains(conn)) {
+//                        isSelected = true;
+//                        break;
+//                    }
+//                }
+//            }
+//            // Move point onto the connector
+//            if (not isSelected and scene()->wire_manager()->attached_wire(conn.get()) == this) {
+//                int index = scene()->wire_manager()->attached_point(conn.get());
+//                QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
+//                move_point_by(index, moveBy);
+//            }
+//        }
 }
 
 void wire::remove_duplicate_points()

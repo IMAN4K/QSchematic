@@ -525,25 +525,25 @@ QVariant Wire::itemChange(QGraphicsItem::GraphicsItemChange change, const QVaria
             break;
         }
         // Move points to their connectors
-        for (const auto& conn : scene()->connectors()) {
-            bool isSelected = false;
-            // Check if the connector's node is selected
-            for (const auto& item : scene()->selectedTopLevelItems()) {
-                auto node = item->sharedPtr<Node>();
-                if (node) {
-                    if (node->connectors().contains(conn)) {
-                        isSelected = true;
-                        break;
-                    }
-                }
-            }
-            // Move point onto the connector
-            if (not isSelected and scene()->wire_manager()->attached_wire(conn.get()) == this) {
-                int index = scene()->wire_manager()->attached_point(conn.get());
-                QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
-                move_point_by(index, moveBy);
-            }
-        }
+//        for (const auto& conn : scene()->connectors()) {
+//            bool isSelected = false;
+//            // Check if the connector's node is selected
+//            for (const auto& item : scene()->selectedTopLevelItems()) {
+//                auto node = item->sharedPtr<Node>();
+//                if (node) {
+//                    if (node->connectors().contains(conn)) {
+//                        isSelected = true;
+//                        break;
+//                    }
+//                }
+//            }
+//            // Move point onto the connector
+//            if (not isSelected and scene()->wire_manager()->attached_wire(conn.get()) == this) {
+//                int index = scene()->wire_manager()->attached_point(conn.get());
+//                QVector2D moveBy(conn->scenePos() - pointsAbsolute().at(index));
+//                move_point_by(index, moveBy);
+//            }
+//        }
         break;
     case ItemSelectedHasChanged:
         if (value.toBool()) {

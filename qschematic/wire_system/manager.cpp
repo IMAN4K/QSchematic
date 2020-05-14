@@ -474,3 +474,14 @@ std::shared_ptr<net> manager::create_net()
     net->set_manager(this);
     return net;
 }
+
+const connectable* manager::connectable_attached_to_point(wire* wire, int point) const
+{
+    for (int index = 0; index < m_connections.count(); index++) {
+        auto pair = m_connections.values().at(index);
+        if (pair.first == wire and pair.second == point) {
+            return m_connections.keys().at(index);
+        }
+    }
+    return nullptr;
+}
