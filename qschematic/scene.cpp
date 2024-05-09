@@ -9,6 +9,7 @@
 #include <QTimer>
 
 #include "scene.hpp"
+#include "background.hpp"
 #include "commands/item_move.hpp"
 #include "commands/item_add.hpp"
 #include "commands/item_remove.hpp"
@@ -54,9 +55,16 @@ Scene::Scene(QObject* parent) :
         _popup->setPos(_lastMousePos + QPointF{ 5, 5 });
     });
 
+    // Background
+    _background = new Background;
+    QGraphicsScene::addItem(_background);
+
     // Stuff
-    connect(this, &QGraphicsScene::sceneRectChanged, [this]{
+    connect(this, &QGraphicsScene::sceneRectChanged, [this](const QRectF& rect){
         renderCachedBackground();
+
+        if (_background)
+            _background->setRect(rect);
     });
 
     // Prepare the background
@@ -65,7 +73,7 @@ Scene::Scene(QObject* parent) :
 
 Scene::~Scene()
 {
-    clear();
+    clear();    // ToDo: This also removes the background
 }
 
 gpds::container

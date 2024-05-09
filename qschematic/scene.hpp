@@ -25,6 +25,8 @@ namespace QSchematic
         class WireNet;
     }
 
+    class Background;
+
     /**
      * The QSchematic Scene.
      *
@@ -287,6 +289,7 @@ namespace QSchematic
         std::shared_ptr<Items::Item> _highlightedItem = nullptr;
         QTimer* _popupTimer = nullptr;
         std::shared_ptr<QGraphicsProxyWidget> _popup;
+        Background* _background = nullptr;
     };
 
 }
