@@ -3,6 +3,7 @@
 #include <QPen>
 #include <QBrush>
 #include <QPainter>
+#include <QStyleOptionGraphicsItem>
 
 using namespace QSchematic;
 
@@ -25,9 +26,12 @@ Background::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
 
     // Background pen
     QPen backgroundPen;
+    backgroundPen.setStyle(Qt::NoPen);
 
     // Background brush
     QBrush backgroundBrush;
+    backgroundBrush.setStyle(Qt::SolidPattern);
+    backgroundBrush.setColor(Qt::white);
 
     // Grid pen
     QPen gridPen;
@@ -40,10 +44,15 @@ Background::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
     QBrush gridBrush;
     gridBrush.setStyle(Qt::NoBrush);
 
+    // Get the rects
+    //
+    // sr = scene rect
+    // ep = exposed rect
+    const QRectF sr = rect();
+    const QRectF er = (option ? option->exposedRect : rect());
+
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, m_settings.antialiasing);
-
-    qDebug() << rect();
 
     // Draw background
     painter->setPen(backgroundPen);
@@ -55,17 +64,12 @@ Background::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
         qreal left = int(rect().left()) - (int(rect().left()) % m_settings.gridSize);
         qreal top = int(rect().top()) - (int(rect().top()) % m_settings.gridSize);
 
-        // Create a list of points
-        QVector<QPointF> points;
-        for (qreal x = left; x < rect().right(); x += m_settings.gridSize) {
-            for (qreal y = top; y < rect().bottom(); y += m_settings.gridSize)
-                points.append(QPointF(x,y));
-        }
-
-        // Draw the actual grid points
         painter->setPen(gridPen);
         painter->setBrush(gridBrush);
-        painter->drawPoints(points.data(), points.size());
+        for (qreal x = left; x < sr.right(); x += m_settings.gridSize) {
+            for (qreal y = top; y < sr.bottom(); y += m_settings.gridSize)
+                painter->drawPoint(x, y);
+        }
     }
 
     // Mark the origin if supposed to
